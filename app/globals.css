@@ -1,0 +1,183 @@
+@import 'tailwindcss';
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  /* Light Theme - Fresh Green */
+  --primary-background: oklch(100% 0 0);
+  --primary-foreground: oklch(18% 0.05 150);
+  --primary-card: oklch(97% 0.04 150);
+  --primary-card-foreground: oklch(22% 0.08 150);
+  --primary-border: oklch(88% 0.08 150);
+  --primary-input: oklch(100% 0 0);
+  --primary-input-foreground: oklch(20% 0.08 150);
+  --primary-button: oklch(68% 0.2 145);
+  --primary-button-hover: oklch(60% 0.22 145);
+  --primary-button-foreground: oklch(100% 0 0);
+  --primary-text: oklch(28% 0.06 150);
+  --primary-muted: oklch(94% 0.03 150);
+  --primary-muted-foreground: oklch(52% 0.08 150);
+  --primary-accent: oklch(90% 0.12 145);
+  --primary-accent-foreground: oklch(25% 0.15 150);
+}
+
+.dark {
+  /* Dark Theme - Elegant with green highlights */
+  --primary-background: oklch(12% 0.04 150);
+  --primary-foreground: oklch(96% 0.02 150);
+  --primary-card: oklch(20% 0.06 150);
+  --primary-card-foreground: oklch(98% 0.02 150);
+  --primary-border: oklch(28% 0.05 150);
+  --primary-input: oklch(20% 0.06 150);
+  --primary-input-foreground: oklch(97% 0.02 150);
+  --primary-button: oklch(62% 0.18 145);
+  --primary-button-hover: oklch(55% 0.2 145);
+  --primary-button-foreground: oklch(100% 0 0);
+  --primary-text: oklch(82% 0.04 150);
+  --primary-muted: oklch(20% 0.04 150);
+  --primary-muted-foreground: oklch(68% 0.06 150);
+  --primary-accent: oklch(48% 0.15 145);
+  --primary-accent-foreground: oklch(94% 0.03 150);
+}
+
+.life {
+  /* Life Theme - Vibrant, multi-color */
+  --primary-background: oklch(97% 0.08 85); /* vibrant warm cream */
+  --primary-foreground: oklch(18% 0.12 45); /* rich chocolate brown */
+  --primary-card: oklch(92% 0.18 35); /* bright coral peach */
+  --primary-card-foreground: oklch(25% 0.15 15); /* deep crimson */
+  --primary-border: oklch(80% 0.25 180); /* electric turquoise */
+  --primary-input: oklch(96% 0.12 75); /* sunny golden yellow */
+  --primary-input-foreground: oklch(22% 0.18 25); /* fiery burnt orange */
+  --primary-button: oklch(70% 0.28 340); /* hot pink */
+  --primary-button-hover: oklch(65% 0.32 320); /* vibrant magenta */
+  --primary-button-foreground: oklch(100% 0 0);
+  --primary-text: oklch(35% 0.22 45); /* golden amber */
+  --primary-muted: oklch(90% 0.15 200); /* bright aqua */
+  --primary-muted-foreground: oklch(55% 0.2 270); /* electric purple */
+  --primary-accent: oklch(75% 0.3 120); /* emerald green */
+  --primary-accent-foreground: oklch(30% 0.2 35); /* bright orange */
+}
+
+body {
+  background: var(--primary-background);
+  color: var(--primary-foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@theme {
+  --color-primary-background: var(--primary-background);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-card: var(--primary-card);
+  --color-primary-card-foreground: var(--primary-card-foreground);
+  --color-primary-border: var(--primary-border);
+  --color-primary-input: var(--primary-input);
+  --color-primary-input-foreground: var(--primary-input-foreground);
+  --color-primary-button: var(--primary-button);
+  --color-primary-button-hover: var(--primary-button-hover);
+  --color-primary-button-foreground: var(--primary-button-foreground);
+  --color-primary-text: var(--primary-text);
+  --color-primary-muted: var(--primary-muted);
+  --color-primary-muted-foreground: var(--primary-muted-foreground);
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-accent-foreground: var(--primary-accent-foreground);
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
+
+/* Toast Container Styling */
+.toast-container {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.Toastify__toast {
+  background: var(--primary-card);
+  color: var(--primary-card-foreground);
+  border: 1px solid var(--primary-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.Toastify__toast--success {
+  background: var(--primary-accent);
+  color: var(--primary-accent-foreground);
+}
+
+.Toastify__toast--error {
+  background: oklch(65% 0.22 10);
+  color: oklch(100% 0 0);
+}
+
+.Toastify__toast--warning {
+  background: oklch(70% 0.18 70);
+  color: oklch(100% 0 0);
+}
+
+.Toastify__toast--info {
+  background: oklch(65% 0.18 220);
+  color: oklch(100% 0 0);
+}
+
+.Toastify__progress-bar {
+  background: var(--primary-button);
+}
+
+.Toastify__close-button {
+  color: var(--primary-card-foreground);
+  opacity: 0.7;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-background);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-accent);
+  border-radius: 6px;
+  border: 2px solid var(--primary-background);
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-accent-foreground);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--primary-background);
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-accent) var(--primary-background);
+}
+
+/* For better scrollbar visibility on different themes */
+html {
+  scrollbar-face-color: var(--primary-accent);
+  scrollbar-track-color: var(--primary-background);
+  scrollbar-arrow-color: var(--primary-accent-foreground);
+  scrollbar-highlight-color: var(--primary-background);
+  scrollbar-shadow-color: var(--primary-background);
+  scrollbar-3dlight-color: var(--primary-accent);
+  scrollbar-darkshadow-color: var(--primary-background);
+}
