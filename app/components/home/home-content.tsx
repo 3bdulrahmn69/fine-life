@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { PageLoading } from '../ui/spinner';
-import Dashboard from '../dashboard/dashboard';
+import OverviewPage from '../../(dashboard)/overview/page';
+import Dashboard from '../../(dashboard)/components/dashboard';
 
 // Home page components (these should be imported as needed)
 import HeroSection from '../sections/hero-section';
@@ -25,9 +26,13 @@ export default function HomeContent() {
     return <PageLoading text="Loading your dashboard..." />;
   }
 
-  // If user is authenticated, show dashboard
+  // If user is authenticated, show overview directly
   if (session) {
-    return <Dashboard />;
+    return (
+      <Dashboard>
+        <OverviewPage />
+      </Dashboard>
+    );
   }
 
   // If user is not authenticated, show home page

@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Block access to sensitive areas
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow crawling of main content
+Allow: /
+Allow: /transactions
+Allow: /budget
+Allow: /goals
+
+# Sitemap
+Sitemap: https://fine-life.vercel.app/sitemap.xml
