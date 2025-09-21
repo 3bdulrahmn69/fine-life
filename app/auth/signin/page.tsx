@@ -20,7 +20,7 @@ import { BiHeart } from 'react-icons/bi';
 
 export default function Signin() {
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,10 +39,8 @@ export default function Signin() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.identifier) {
+      newErrors.identifier = 'Email or username is required';
     }
 
     if (!formData.password) {
@@ -62,14 +60,13 @@ export default function Signin() {
 
     try {
       const result = await signIn('credentials', {
-        email: formData.email,
+        identifier: formData.identifier,
         password: formData.password,
         redirect: false,
       });
 
       if (result?.error) {
         setErrors({ general: 'Invalid email or password' });
-        toast.error('Invalid email or password');
       } else {
         // Refresh session and redirect
         await getSession();
@@ -79,7 +76,6 @@ export default function Signin() {
     } catch (error) {
       console.error('Login error:', error);
       setErrors({ general: 'Something went wrong. Please try again.' });
-      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -134,12 +130,12 @@ export default function Signin() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
+                name="identifier"
+                type="text"
+                placeholder="Enter your email or username"
+                value={formData.identifier}
                 onChange={handleInputChange}
-                error={errors.email}
+                error={errors.identifier}
                 disabled={isLoading}
                 leftIcon={<FiMail className="w-4 h-4" />}
               />

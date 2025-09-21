@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { Button } from '../../components/ui/button';
@@ -22,6 +23,9 @@ import {
   FiCalendar,
   FiArrowLeft,
   FiShield,
+  FiCheck,
+  FiX,
+  FiAtSign,
 } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import { BiHeart } from 'react-icons/bi';
@@ -30,6 +34,7 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    username: '',
     password: '',
     confirmPassword: '',
     dateOfBirth: '',
@@ -37,14 +42,28 @@ export default function Signup() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null
+  );
+  const [lastCheckedUsername, setLastCheckedUsername] = useState('');
   const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    const previousValue = formData[name as keyof typeof formData];
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+
+    // Reset username availability if username changed
+    if (name === 'username' && value !== previousValue) {
+      setUsernameAvailable(null);
+      setLastCheckedUsername('');
+    }
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -68,6 +87,25 @@ export default function Signup() {
           fieldError = 'Email is required';
         } else if (typeof value === 'string' && !/\S+@\S+\.\S+/.test(value)) {
           fieldError = 'Please enter a valid email address';
+        }
+        break;
+
+      case 'username':
+        if (!value) {
+          fieldError = 'Username is required';
+        } else if (typeof value === 'string' && value.length < 3) {
+          fieldError = 'Username must be at least 3 characters';
+        } else if (
+          typeof value === 'string' &&
+          !/^[a-zA-Z0-9_]+$/.test(value)
+        ) {
+          fieldError =
+            'Username can only contain letters, numbers, and underscores';
+        } else if (usernameAvailable === false) {
+          fieldError =
+            'This username is already taken. Please choose another one.';
+        } else if (usernameChecking) {
+          fieldError = 'Checking username availability...';
         }
         break;
 
@@ -131,6 +169,71 @@ export default function Signup() {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === 'checkbox' ? checked : value;
     validateField(name, fieldValue);
+
+    // Check username availability when user leaves the field
+    if (
+      name === 'username' &&
+      value &&
+      typeof value === 'string' &&
+      value.length >= 3
+    ) {
+      checkUsernameAvailability(value);
+    }
+  };
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (username.length < 3) return;
+
+    // Don't check if username hasn't changed since last check
+    if (username === lastCheckedUsername && usernameAvailable !== null) {
+      return;
+    }
+
+    setUsernameChecking(true);
+    setUsernameAvailable(null);
+
+    // Clear any existing username availability error
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (
+        newErrors.username ===
+          'This username is already taken. Please choose another one.' ||
+        newErrors.username === 'Checking username availability...'
+      ) {
+        delete newErrors.username;
+      }
+      return newErrors;
+    });
+
+    try {
+      const response = await fetch('/api/user/check-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await response.json();
+      setUsernameAvailable(data.available);
+      setLastCheckedUsername(username); // Update last checked username
+
+      // Re-validate the username field to show appropriate error
+      if (!data.available) {
+        setErrors((prev) => ({
+          ...prev,
+          username:
+            'This username is already taken. Please choose another one.',
+        }));
+      }
+    } catch (error) {
+      console.error('Username check error:', error);
+      setUsernameAvailable(null);
+      setErrors((prev) => ({
+        ...prev,
+        username: 'Unable to check username availability. Please try again.',
+      }));
+    } finally {
+      setUsernameChecking(false);
+    }
   };
 
   const validateForm = () => {
@@ -143,6 +246,19 @@ export default function Signup() {
         validationErrors[key] = error;
       }
     });
+
+    // Special check for username availability
+    if (formData.username && formData.username.length >= 3) {
+      if (usernameChecking) {
+        validationErrors.username = 'Checking username availability...';
+      } else if (usernameAvailable === false) {
+        validationErrors.username =
+          'This username is already taken. Please choose another one.';
+      } else if (usernameAvailable === null) {
+        validationErrors.username =
+          'Please wait for username availability check to complete.';
+      }
+    }
 
     // Update errors state with all validation results
     setErrors(validationErrors);
@@ -200,14 +316,13 @@ export default function Signup() {
 
   const handleGoogleSignUp = () => {
     toast.info('Redirecting to Google...');
-    // TODO: Implement Google OAuth sign up
-    console.log('Google sign up clicked');
+    signIn('google', { callbackUrl: '/' });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-background via-primary-muted to-primary-accent flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-background via-primary-muted to-primary-accent flex items-center justify-center p-4 relative">
       {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-primary-button/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-primary-accent/20 rounded-full blur-2xl"></div>
         <div className="absolute top-1/3 left-1/4 w-24 h-24 bg-primary-button/15 rounded-full blur-lg"></div>
@@ -272,6 +387,45 @@ export default function Signup() {
               />
 
               <Input
+                name="username"
+                type="text"
+                placeholder="Choose a unique username"
+                value={formData.username}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                error={errors.username}
+                disabled={isLoading}
+                leftIcon={<FiAtSign className="w-4 h-4" />}
+              />
+
+              {/* Username availability feedback */}
+              {formData.username && formData.username.length >= 3 && (
+                <div className="flex items-center gap-2 mt-1 ml-1">
+                  {usernameChecking ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  ) : usernameAvailable === true ? (
+                    <FiCheck className="w-4 h-4 text-green-500" />
+                  ) : usernameAvailable === false ? (
+                    <FiX className="w-4 h-4 text-red-500" />
+                  ) : null}
+
+                  {usernameChecking ? (
+                    <span className="text-sm text-gray-500">
+                      Checking availability...
+                    </span>
+                  ) : usernameAvailable === true ? (
+                    <span className="text-sm text-green-600">
+                      Username available
+                    </span>
+                  ) : usernameAvailable === false ? (
+                    <span className="text-sm text-red-600">
+                      Username already taken
+                    </span>
+                  ) : null}
+                </div>
+              )}
+
+              <Input
                 name="password"
                 type="password"
                 placeholder="Create a strong password"
@@ -300,12 +454,23 @@ export default function Signup() {
               <Input
                 name="dateOfBirth"
                 type="date"
+                label="Date of Birth"
+                placeholder="Select your date of birth"
                 value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    dateOfBirth: e.target.value,
+                  }));
+                  if (errors.dateOfBirth) {
+                    setErrors((prev) => ({ ...prev, dateOfBirth: '' }));
+                  }
+                }}
+                onBlur={() =>
+                  validateField('dateOfBirth', formData.dateOfBirth)
+                }
                 error={errors.dateOfBirth}
                 disabled={isLoading}
-                max={new Date().toISOString().split('T')[0]}
                 leftIcon={<FiCalendar className="w-4 h-4" />}
               />
 

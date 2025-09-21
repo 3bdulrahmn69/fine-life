@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { ToastContainer } from 'react-toastify';
+import AuthProvider from './providers/auth-provider';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
@@ -30,28 +31,30 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          themes={['light', 'dark', 'life', 'system']}
-          enableSystem={true}
-          storageKey="fine-life-theme"
-        >
-          <ToastContainer
-            position="bottom-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-            className="toast-container"
-          />
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            themes={['light', 'dark', 'life', 'system']}
+            enableSystem={true}
+            storageKey="fine-life-theme"
+          >
+            <ToastContainer
+              position="bottom-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+              className="toast-container"
+            />
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

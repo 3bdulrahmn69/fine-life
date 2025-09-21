@@ -4,6 +4,10 @@ import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
+import {
+  generateGoogleUserData,
+  generateUniqueUsername,
+} from '../../../lib/auth-utils';
 
 declare module 'next-auth' {
   interface Session {
@@ -25,20 +29,25 @@ const handler = NextAuth({
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        identifier: { label: 'Email or Username', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.identifier || !credentials?.password) {
           return null;
         }
 
         try {
           await connectDB();
 
-          const user = await User.findOne({ email: credentials.email }).select(
-            '+password'
-          );
+          // Check if identifier is email or username
+          const isEmail = /\S+@\S+\.\S+/.test(credentials.identifier);
+
+          const user = await User.findOne(
+            isEmail
+              ? { email: credentials.identifier }
+              : { username: credentials.identifier }
+          ).select('+password');
 
           if (!user) {
             return null;
@@ -59,7 +68,15 @@ const handler = NextAuth({
             name: user.fullName,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('Credentials authentication error:', error);
+          // More specific error logging for debugging
+          if (error instanceof Error) {
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              identifier: credentials.identifier,
+            });
+          }
           return null;
         }
       },
@@ -80,15 +97,51 @@ const handler = NextAuth({
     strategy: 'jwt' as const,
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
+        // For Google OAuth users, we need to find their database ID
+        if (user.email && !token.dbId) {
+          try {
+            await connectDB();
+            const dbUser = await User.findOne({ email: user.email });
+            if (dbUser) {
+              token.dbId = dbUser._id.toString();
+              token.id = dbUser._id.toString(); // Use database ID, not Google ID
+              token.name = dbUser.fullName;
+              token.email = dbUser.email;
+            } else {
+              // Fallback to provided user data if DB user not found
+              token.id = user.id;
+              token.name = user.name;
+              token.email = user.email;
+            }
+          } catch (error) {
+            console.error('Error finding user in JWT callback:', error);
+            // Fallback to provided user data
+            token.id = user.id;
+            token.name = user.name;
+            token.email = user.email;
+          }
+        } else {
+          token.id = user.id;
+          token.name = user.name;
+          token.email = user.email;
+        }
       }
+
+      // Handle session updates
+      if (trigger === 'update' && session) {
+        token.name = session.user.name;
+        token.email = session.user.email;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
       }
       return session;
     },
@@ -99,19 +152,61 @@ const handler = NextAuth({
 
           const existingUser = await User.findOne({ email: user.email });
 
-          if (!existingUser) {
-            // Create a new user for Google sign-in
-            await User.create({
-              fullName: user.name || '',
+          if (!existingUser && user.email) {
+            // Generate secure user data for Google sign-in
+            const userData = await generateGoogleUserData({
+              name: user.name,
               email: user.email,
-              password: 'google-auth', // Placeholder for Google users
-              dateOfBirth: new Date('1990-01-01'), // Default date, user can update later
             });
+
+            // Create a new user for Google sign-in
+            const newUser = await User.create(userData);
+
+            console.log(
+              `New Google user created successfully: ${user.email} with username: ${userData.username}`
+            );
+
+            // Verify the user was actually created
+            if (!newUser) {
+              console.error('Failed to create new Google user in database');
+              return false;
+            }
+          } else if (existingUser && !existingUser.username && user.email) {
+            // If user exists but doesn't have username, generate one
+            const username = await generateUniqueUsername(user.email);
+            existingUser.username = username;
+            await existingUser.save();
+            console.log(`Username generated for existing user: ${username}`);
+          } else if (existingUser && user.email) {
+            // Check if the existing user has an unhashed password and fix it
+            const isPasswordHashed =
+              existingUser.password.startsWith('$2b$') ||
+              existingUser.password.startsWith('$2a$');
+
+            if (!isPasswordHashed) {
+              console.log(`Fixing unhashed password for user: ${user.email}`);
+              // The save() will trigger the pre-save hook to hash the password
+              await existingUser.save();
+            }
           }
 
           return true;
         } catch (error) {
           console.error('Google sign-in error:', error);
+
+          // Enhanced error logging
+          if (error instanceof Error) {
+            console.error('Google OAuth error details:', {
+              message: error.message,
+              stack: error.stack,
+              userEmail: user.email,
+              provider: account?.provider,
+            });
+          }
+
+          // Log to external service if available (you could add services like Sentry here)
+          // logErrorToService('google-oauth-error', error, { userEmail: user.email });
+
           return false;
         }
       }

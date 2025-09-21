@@ -5,10 +5,11 @@ import User from '../../../models/User';
 
 export async function POST(request: NextRequest) {
   try {
-    const { fullName, email, password, dateOfBirth } = await request.json();
+    const { fullName, email, username, password, dateOfBirth } =
+      await request.json();
 
     // Validation
-    if (!fullName || !email || !password || !dateOfBirth) {
+    if (!fullName || !email || !username || !password || !dateOfBirth) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -24,20 +25,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Password validation
-    if (password.length < 8) {
+    // Username validation
+    if (username.length < 3) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
+        { error: 'Username must be at least 3 characters' },
         { status: 400 }
       );
     }
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return NextResponse.json(
         {
-          error:
-            'Password must contain at least one uppercase letter, lowercase letter, and number',
+          error: 'Username can only contain letters, numbers, and underscores',
         },
+        { status: 400 }
+      );
+    }
+
+    // Password validation
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
         { status: 400 }
       );
     }
@@ -65,15 +73,27 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({
+      $or: [{ email: email.toLowerCase() }, { username: username.trim() }],
+    });
     if (existingUser) {
-      return NextResponse.json(
-        {
-          error:
-            'This email address is already registered. Please try signing in instead.',
-        },
-        { status: 400 }
-      );
+      if (existingUser.email === email.toLowerCase()) {
+        return NextResponse.json(
+          {
+            error:
+              'This email address is already registered. Please try signing in instead.',
+          },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          {
+            error:
+              'This username is already taken. Please choose a different username.',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Hash password
@@ -83,12 +103,14 @@ export async function POST(request: NextRequest) {
     const user = await User.create({
       fullName: fullName.trim(),
       email: email.toLowerCase(),
+      username: username.trim(),
       password: hashedPassword,
       dateOfBirth: birthDate,
     });
 
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user.toObject();
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
 
     return NextResponse.json(
       {
