@@ -23,7 +23,7 @@ export default function HomeContent() {
 
   // Show loading state while checking authentication
   if (status === 'loading') {
-    return <PageLoading text="Loading your dashboard..." />;
+    return <PageLoading text="Preparing your things..." />;
   }
 
   // If user is authenticated, show overview directly
@@ -42,15 +42,17 @@ export default function HomeContent() {
       <Header />
 
       {/* Page Sections */}
-      <HeroSection />
-      <FeaturesSection />
-      <BenefitsSection />
-      <TestimonialsSection />
-      <StatsSection />
-      <HowItWorksSection />
-      <FAQSection />
-      <PremiumSection />
-      <CTASection />
+      <main id="main-content">
+        <HeroSection />
+        <FeaturesSection />
+        <BenefitsSection />
+        <TestimonialsSection />
+        <StatsSection />
+        <HowItWorksSection />
+        <FAQSection />
+        <PremiumSection />
+        <CTASection />
+      </main>
 
       {/* Footer */}
       <Footer />

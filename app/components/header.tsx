@@ -42,7 +42,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav id="navigation" className="hidden md:flex items-center gap-8">
             {navigation.map((item) => (
               <a
                 key={item.name}
@@ -75,6 +75,10 @@ export default function Header() {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-lg hover:bg-primary-accent/10 transition-colors"
+              aria-label={
+                isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'
+              }
+              aria-expanded={isMenuOpen}
             >
               {isMenuOpen ? (
                 <BiX className="text-2xl text-primary-foreground" />

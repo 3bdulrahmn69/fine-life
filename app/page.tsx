@@ -2,7 +2,7 @@ import HomeContent from './components/home/home-content';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Home',
+  title: 'Fine Life - Transform Your Financial Future',
   description:
     'Transform your financial life with smart tracking, intelligent budgeting, and community-driven insights. Start your journey to financial freedom today.',
   keywords: [

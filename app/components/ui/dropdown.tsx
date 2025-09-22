@@ -29,6 +29,7 @@ interface DropdownTriggerProps {
   children: ReactNode;
   className?: string;
   asChild?: boolean;
+  ariaLabel?: string;
 }
 
 interface DropdownContentProps {
@@ -38,11 +39,10 @@ interface DropdownContentProps {
   side?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-interface DropdownItemProps {
+interface DropdownItemProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   className?: string;
-  onClick?: () => void;
-  disabled?: boolean;
 }
 
 const Dropdown = ({ children, className }: DropdownProps) => {
@@ -100,6 +100,7 @@ const DropdownTrigger = ({
   children,
   className,
   asChild = false,
+  ariaLabel = 'Toggle Dropdown',
 }: DropdownTriggerProps) => {
   const context = useContext(DropdownContext);
   if (!context) {
@@ -129,6 +130,7 @@ const DropdownTrigger = ({
       )}
       aria-expanded={isOpen}
       aria-haspopup="true"
+      aria-label={ariaLabel}
     >
       {children}
     </button>
@@ -185,6 +187,7 @@ const DropdownItem = ({
   className,
   onClick,
   disabled = false,
+  ...props
 }: DropdownItemProps) => {
   const context = useContext(DropdownContext);
   if (!context) {
@@ -193,9 +196,11 @@ const DropdownItem = ({
 
   const { setIsOpen } = context;
 
-  const handleClick = () => {
-    if (!disabled && onClick) {
-      onClick();
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!disabled) {
+      if (onClick) {
+        onClick(event);
+      }
       setIsOpen(false);
     }
   };
@@ -212,6 +217,7 @@ const DropdownItem = ({
       onClick={handleClick}
       disabled={disabled}
       role="menuitem"
+      {...props}
     >
       {children}
     </button>

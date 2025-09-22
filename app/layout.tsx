@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://fine-life.vercel.app'), // Replace with your actual domain
+  metadataBase: new URL('https://fine-life.vercel.app'),
   alternates: {
     canonical: '/',
   },
@@ -97,6 +97,8 @@ export const metadata: Metadata = {
     'msapplication-TileColor': '#000000',
     'msapplication-config': '/browserconfig.xml',
     'theme-color': '#000000',
+    'color-scheme': 'light dark',
+    referrer: 'strict-origin-when-cross-origin',
     preconnect: 'https://fonts.googleapis.com',
     'dns-prefetch': 'https://fonts.gstatic.com',
   },
@@ -146,10 +148,43 @@ export default function RootLayout({
             __html: JSON.stringify(structuredData),
           }}
         />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5"
+        />
+        <meta name="theme-color" content="#000000" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin=""
+        />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon-96x96.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Skip Links for Accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-accent text-primary-accent-foreground px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-primary-accent focus:ring-offset-2"
+        >
+          Skip to main content
+        </a>
+        <a
+          href="#navigation"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-32 bg-primary-accent text-primary-accent-foreground px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-primary-accent focus:ring-offset-2"
+        >
+          Skip to navigation
+        </a>
         <AuthProvider>
           <ThemeProvider
             attribute="class"
