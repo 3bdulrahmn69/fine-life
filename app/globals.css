@@ -8,58 +8,58 @@ html {
 :root {
   /* Light Theme – Fresh Green */
   --primary-background: oklch(99% 0.01 150); /* near white */
-  --primary-foreground: oklch(20% 0.12 150); /* dark text */
-  --primary-card: oklch(96% 0.02 150); /* light card */
-  --primary-card-foreground: oklch(22% 0.12 150);
+  --primary-foreground: oklch(18% 0.05 150); /* dark neutral text */
+  --primary-card: oklch(96% 0.02 150);
+  --primary-card-foreground: oklch(20% 0.06 150);
   --primary-border: oklch(88% 0.04 150);
   --primary-input: oklch(100% 0 0);
-  --primary-input-foreground: oklch(20% 0.12 150);
-  --primary-button: oklch(55% 0.25 145); /* vibrant green */
-  --primary-button-hover: oklch(48% 0.28 145);
+  --primary-input-foreground: oklch(20% 0.06 150);
+  --primary-button: oklch(70% 0.25 140); /* bright spring green */
+  --primary-button-hover: oklch(65% 0.28 140); /* deeper */
   --primary-button-foreground: oklch(99% 0.01 150); /* white text */
-  --primary-text: oklch(25% 0.1 150);
+  --primary-text: oklch(25% 0.05 150);
   --primary-muted: oklch(96% 0.01 150);
-  --primary-muted-foreground: oklch(45% 0.08 150);
-  --primary-accent: oklch(60% 0.25 145); /* accent green */
+  --primary-muted-foreground: oklch(45% 0.05 150);
+  --primary-accent: oklch(72% 0.22 140); /* accent green */
   --primary-accent-foreground: oklch(99% 0.01 150);
 }
 
 .dark {
-  /* Dark Theme – Consistent Green */
-  --primary-background: oklch(10% 0.05 150); /* very dark */
+  /* Dark Theme – Deep Emerald */
+  --primary-background: oklch(12% 0.04 150); /* almost black */
   --primary-foreground: oklch(96% 0.02 150); /* light text */
-  --primary-card: oklch(16% 0.06 150);
-  --primary-card-foreground: oklch(94% 0.02 150);
-  --primary-border: oklch(26% 0.06 150);
-  --primary-input: oklch(18% 0.06 150);
+  --primary-card: oklch(18% 0.05 150);
+  --primary-card-foreground: oklch(92% 0.02 150);
+  --primary-border: oklch(28% 0.06 150);
+  --primary-input: oklch(20% 0.05 150);
   --primary-input-foreground: oklch(96% 0.02 150);
-  --primary-button: oklch(65% 0.22 145); /* saturated green */
-  --primary-button-hover: oklch(70% 0.24 145);
-  --primary-button-foreground: oklch(10% 0.02 150); /* dark text for contrast */
+  --primary-button: oklch(55% 0.2 140); /* rich green */
+  --primary-button-hover: oklch(60% 0.22 140);
+  --primary-button-foreground: oklch(99% 0.01 150); /* white text */
   --primary-text: oklch(92% 0.02 150);
-  --primary-muted: oklch(18% 0.05 150);
-  --primary-muted-foreground: oklch(70% 0.05 150);
-  --primary-accent: oklch(75% 0.25 145); /* bright accent green */
-  --primary-accent-foreground: oklch(12% 0.02 150);
+  --primary-muted: oklch(18% 0.04 150);
+  --primary-muted-foreground: oklch(70% 0.04 150);
+  --primary-accent: oklch(58% 0.2 140); /* emerald accent */
+  --primary-accent-foreground: oklch(99% 0.01 150);
 }
 
 .life {
-  /* Life Theme - Vibrant, multi-color */
-  --primary-background: oklch(95% 0.12 85); /* vibrant warm cream */
-  --primary-foreground: oklch(14% 0.18 45); /* rich chocolate brown */
-  --primary-card: oklch(88% 0.28 35); /* bright coral peach */
-  --primary-card-foreground: oklch(10% 0.22 15); /* deep crimson */
-  --primary-border: oklch(70% 0.35 180); /* electric turquoise */
-  --primary-input: oklch(93% 0.18 75); /* sunny golden yellow */
-  --primary-input-foreground: oklch(15% 0.25 25); /* fiery burnt orange */
-  --primary-button: oklch(16% 0.4 340); /* hot pink */
-  --primary-button-hover: oklch(12% 0.45 320); /* vibrant magenta */
-  --primary-button-foreground: oklch(100% 0 0);
-  --primary-text: oklch(16% 0.28 45); /* golden amber */
-  --primary-muted: oklch(80% 0.25 200); /* bright aqua */
-  --primary-muted-foreground: oklch(12% 0.28 270); /* electric purple */
-  --primary-accent: oklch(35% 0.4 120); /* emerald green */
-  --primary-accent-foreground: oklch(6% 0.3 35); /* bright orange */
+  /* Life Theme – Playful & Colorful Harmony */
+  --primary-background: oklch(97% 0.05 95); /* soft warm cream */
+  --primary-foreground: oklch(18% 0.1 45); /* rich warm brown */
+  --primary-card: oklch(92% 0.15 75); /* soft golden yellow */
+  --primary-card-foreground: oklch(20% 0.15 25); /* deep orange-brown */
+  --primary-border: oklch(78% 0.2 200); /* aqua teal for contrast */
+  --primary-input: oklch(95% 0.07 100); /* pale minty green */
+  --primary-input-foreground: oklch(20% 0.15 25); /* warm dark orange */
+  --primary-button: oklch(60% 0.25 20); /* lively coral red */
+  --primary-button-hover: oklch(55% 0.28 25); /* deeper coral */
+  --primary-button-foreground: oklch(99% 0.01 95); /* white text */
+  --primary-text: oklch(22% 0.12 40); /* earthy amber-brown */
+  --primary-muted: oklch(88% 0.1 210); /* soft sky blue */
+  --primary-muted-foreground: oklch(35% 0.15 270); /* rich violet */
+  --primary-accent: oklch(65% 0.22 140); /* emerald green */
+  --primary-accent-foreground: oklch(12% 0.12 25); /* warm dark */
 }
 
 body {
@@ -185,4 +185,13 @@ html {
 /* Custom gradient utilities for hero section */
 .bg-gradient-radial {
   background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+.spending-pie-chart svg:focus,
+.spending-pie-chart svg:focus-visible,
+.spending-pie-chart *:focus,
+.spending-pie-chart *:focus-visible {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
 }

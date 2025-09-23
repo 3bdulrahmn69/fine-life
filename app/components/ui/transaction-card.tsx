@@ -1,0 +1,161 @@
+'use client';
+
+import { Transaction, TransactionType } from '../../types/transaction';
+import { getCategoryById, getSubcategoryById } from '../../data/categories';
+import { formatCurrency, CurrencyCode } from '../../lib/currency';
+import { format } from 'date-fns';
+import { CategoryIcon } from '../../lib/icons';
+
+interface TransactionCardProps {
+  transaction: Transaction;
+  currency?: CurrencyCode;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transactionId: string) => void;
+  showActions?: boolean;
+}
+
+export default function TransactionCard({
+  transaction,
+  currency = 'USD',
+  onEdit,
+  onDelete,
+  showActions = true,
+}: TransactionCardProps) {
+  const category = getCategoryById(transaction.category);
+  const subcategory = transaction.subcategory
+    ? getSubcategoryById(transaction.category, transaction.subcategory)
+    : null;
+
+  const isIncome = transaction.type === TransactionType.INCOME;
+  const amountDisplay = isIncome ? transaction.amount : -transaction.amount;
+
+  return (
+    <div className="bg-primary-card rounded-lg border border-primary-border p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center space-x-3 flex-1">
+          {/* Category Icon */}
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+            style={{
+              backgroundColor: category?.color || 'var(--primary-accent)',
+            }}
+          >
+            <CategoryIcon
+              categoryId={transaction.category}
+              className="w-5 h-5"
+            />
+          </div>
+
+          {/* Transaction Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-primary-card-foreground truncate">
+                {transaction.description}
+              </h3>
+              <span
+                className={`text-lg font-semibold ${
+                  isIncome ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {isIncome ? '+' : ''}
+                {formatCurrency(amountDisplay, currency)}
+              </span>
+            </div>
+
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-primary-muted-foreground">
+              <span>{category?.name}</span>
+              {subcategory && (
+                <>
+                  <span>•</span>
+                  <span>{subcategory.name}</span>
+                </>
+              )}
+              <span>•</span>
+              <span>{format(new Date(transaction.date), 'MMM dd, yyyy')}</span>
+              <span>•</span>
+              <span>{format(new Date(transaction.date), 'h:mm a')}</span>
+            </div>
+
+            {/* Transaction Tags */}
+            <div className="mt-2 flex flex-wrap gap-1">
+              {transaction.isMandatory && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-destructive text-destructive-foreground">
+                  Mandatory
+                </span>
+              )}
+              {transaction.isAutomatic && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-accent text-primary-accent-foreground">
+                  Automatic
+                </span>
+              )}
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                  isIncome
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {isIncome ? 'Income' : 'Expense'}
+              </span>
+            </div>
+
+            {/* Notes */}
+            {transaction.notes && (
+              <p className="mt-2 text-sm text-primary-muted-foreground italic">
+                {transaction.notes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        {showActions && (onEdit || onDelete) && (
+          <div className="flex items-center space-x-2 ml-4">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(transaction)}
+                className="p-1 text-primary-muted-foreground hover:text-primary-accent transition-colors"
+                title="Edit transaction"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(transaction._id!)}
+                className="p-1 text-primary-muted-foreground hover:text-destructive transition-colors"
+                title="Delete transaction"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

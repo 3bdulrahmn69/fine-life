@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
 import {
   Card,
@@ -14,86 +16,57 @@ import {
   FiTrendingDown,
   FiTarget,
   FiPlus,
-  FiPieChart,
-  FiBarChart,
   FiCreditCard,
   FiDollarSign,
+  FiPieChart,
 } from 'react-icons/fi';
 import { BiWallet } from 'react-icons/bi';
+import { useTransactionData } from '../../hooks/useTransactionData';
+import { formatCurrency } from '../../lib/currency';
+import { format } from 'date-fns';
+import SpendingCategories from '../../components/ui/spending-categories';
+import TransactionModal from '../../components/ui/transaction-modal';
 
 export default function OverviewPage() {
   const { data: session } = useSession();
+  const router = useRouter();
+  const { stats, recentTransactions, allTransactions, refetch } =
+    useTransactionData();
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
-  const stats = [
+  // Calculate stats with real data
+  const currentStats = [
     {
-      title: 'Total Balance',
-      value: '$12,450.32',
-      change: '+12.5%',
-      trend: 'up',
+      title: 'Monthly Balance',
+      value: stats ? formatCurrency(stats.balance) : '$0.00',
+      change: stats && stats.balance >= 0 ? '+100%' : '0%',
+      trend: stats && stats.balance >= 0 ? 'up' : 'down',
       icon: BiWallet,
-      color: 'bg-green-500',
+      color: stats && stats.balance >= 0 ? 'bg-green-500' : 'bg-red-500',
     },
     {
       title: 'Monthly Income',
-      value: '$4,230.00',
-      change: '+8.2%',
+      value: stats ? formatCurrency(stats.totalIncome) : '$0.00',
+      change: '+0%', // TODO: Calculate change from previous month
       trend: 'up',
       icon: FiTrendingUp,
       color: 'bg-blue-500',
     },
     {
       title: 'Monthly Expenses',
-      value: '$2,180.50',
-      change: '-3.1%',
+      value: stats ? formatCurrency(stats.totalExpenses) : '$0.00',
+      change: '0%', // TODO: Calculate change from previous month
       trend: 'down',
       icon: FiTrendingDown,
       color: 'bg-red-500',
     },
     {
-      title: 'Savings Goal',
-      value: '68%',
-      change: '+15.3%',
+      title: 'Transactions',
+      value: stats ? stats.transactionCount.toString() : '0',
+      change: '+0%',
       trend: 'up',
       icon: FiTarget,
       color: 'bg-purple-500',
-    },
-  ];
-
-  const recentTransactions = [
-    {
-      id: 1,
-      description: 'Grocery Shopping',
-      amount: -85.5,
-      date: '2025-09-19',
-      category: 'Food',
-    },
-    {
-      id: 2,
-      description: 'Salary Deposit',
-      amount: 4230.0,
-      date: '2025-09-18',
-      category: 'Income',
-    },
-    {
-      id: 3,
-      description: 'Netflix Subscription',
-      amount: -15.99,
-      date: '2025-09-17',
-      category: 'Entertainment',
-    },
-    {
-      id: 4,
-      description: 'Gas Station',
-      amount: -45.2,
-      date: '2025-09-16',
-      category: 'Transportation',
-    },
-    {
-      id: 5,
-      description: 'Coffee Shop',
-      amount: -12.5,
-      date: '2025-09-15',
-      category: 'Food',
     },
   ];
 
@@ -116,7 +89,10 @@ export default function OverviewPage() {
           </p>
         </div>
 
-        <Button className="bg-gradient-to-r from-primary-button to-primary-button-hover">
+        <Button
+          onClick={() => setShowTransactionModal(true)}
+          className="bg-gradient-to-r from-primary-button to-primary-button-hover"
+        >
           <FiPlus className="w-4 h-4 mr-2" />
           Add Transaction
         </Button>
@@ -124,7 +100,7 @@ export default function OverviewPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {currentStats.map((stat, index) => (
           <Card key={index} className="bg-primary-card border-primary-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -175,12 +151,11 @@ export default function OverviewPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-center h-48 text-primary-muted-foreground">
-              <div className="text-center">
-                <FiBarChart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Chart visualization coming soon</p>
-              </div>
-            </div>
+            <SpendingCategories
+              transactions={allTransactions}
+              currency="USD"
+              period="month"
+            />
           </CardContent>
         </Card>
 
@@ -197,18 +172,20 @@ export default function OverviewPage() {
             <div className="space-y-4">
               {recentTransactions.map((transaction) => (
                 <div
-                  key={transaction.id}
+                  key={transaction._id}
                   className="flex items-center justify-between p-3 bg-primary-muted/30 rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
+                        transaction.type === 'income'
+                          ? 'bg-green-100'
+                          : 'bg-red-100'
                       }`}
                     >
                       <FiDollarSign
                         className={`w-4 h-4 ${
-                          transaction.amount > 0
+                          transaction.type === 'income'
                             ? 'text-green-600'
                             : 'text-red-600'
                         }`}
@@ -219,27 +196,43 @@ export default function OverviewPage() {
                         {transaction.description}
                       </p>
                       <p className="text-sm text-primary-muted-foreground">
-                        {transaction.category} • {transaction.date}
+                        {transaction.category} •{' '}
+                        {format(new Date(transaction.date), 'MMM dd, yyyy')}
                       </p>
                     </div>
                   </div>
                   <p
                     className={`font-semibold ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                      transaction.type === 'income'
+                        ? 'text-green-600'
+                        : 'text-red-600'
                     }`}
                   >
-                    {transaction.amount > 0 ? '+' : ''}$
-                    {Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.type === 'income' ? '+' : '-'}
+                    {formatCurrency(transaction.amount)}
                   </p>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4">
+            <Button
+              variant="outline"
+              className="w-full mt-4"
+              onClick={() => router.push('/transactions')}
+            >
               View All Transactions
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={showTransactionModal}
+        onClose={() => setShowTransactionModal(false)}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
     </div>
   );
 }
