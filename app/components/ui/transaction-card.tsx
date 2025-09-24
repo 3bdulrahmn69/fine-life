@@ -30,30 +30,30 @@ export default function TransactionCard({
   const amountDisplay = isIncome ? transaction.amount : -transaction.amount;
 
   return (
-    <div className="bg-primary-card rounded-lg border border-primary-border p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
+    <div className="bg-primary-card rounded-lg border border-primary-border p-3 sm:p-4 hover:shadow-md transition-shadow">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
         <div className="flex items-center space-x-3 flex-1">
           {/* Category Icon */}
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white flex-shrink-0"
             style={{
               backgroundColor: category?.color || 'var(--primary-accent)',
             }}
           >
             <CategoryIcon
               categoryId={transaction.category}
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5"
             />
           </div>
 
           {/* Transaction Details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-primary-card-foreground truncate">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
+              <h3 className="text-sm sm:text-base font-medium text-primary-card-foreground truncate">
                 {transaction.description}
               </h3>
               <span
-                className={`text-lg font-semibold ${
+                className={`text-base sm:text-lg font-semibold ${
                   isIncome ? 'text-green-600' : 'text-red-600'
                 }`}
               >
@@ -62,7 +62,7 @@ export default function TransactionCard({
               </span>
             </div>
 
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-primary-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-primary-muted-foreground">
               <span>{category?.name}</span>
               {subcategory && (
                 <>
@@ -101,7 +101,7 @@ export default function TransactionCard({
 
             {/* Notes */}
             {transaction.notes && (
-              <p className="mt-2 text-sm text-primary-muted-foreground italic">
+              <p className="mt-2 text-xs sm:text-sm text-primary-muted-foreground italic">
                 {transaction.notes}
               </p>
             )}
@@ -110,11 +110,11 @@ export default function TransactionCard({
 
         {/* Actions */}
         {showActions && (onEdit || onDelete) && (
-          <div className="flex items-center space-x-2 ml-4">
+          <div className="flex items-center space-x-2 sm:ml-4 self-end sm:self-start">
             {onEdit && (
               <button
                 onClick={() => onEdit(transaction)}
-                className="p-1 text-primary-muted-foreground hover:text-primary-accent transition-colors"
+                className="p-1.5 sm:p-1 text-primary-muted-foreground hover:text-primary-accent transition-colors rounded-md hover:bg-primary-accent/10"
                 title="Edit transaction"
               >
                 <svg
@@ -135,7 +135,7 @@ export default function TransactionCard({
             {onDelete && (
               <button
                 onClick={() => onDelete(transaction._id!)}
-                className="p-1 text-primary-muted-foreground hover:text-destructive transition-colors"
+                className="p-1.5 sm:p-1 text-primary-muted-foreground hover:text-destructive transition-colors rounded-md hover:bg-destructive/10"
                 title="Delete transaction"
               >
                 <svg

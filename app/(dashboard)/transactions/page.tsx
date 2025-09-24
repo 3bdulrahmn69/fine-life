@@ -205,21 +205,21 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-primary-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground">
             Transactions
           </h1>
-          <p className="text-primary-muted-foreground mt-1">
+          <p className="text-primary-muted-foreground mt-1 text-sm sm:text-base">
             Track your income and expenses
           </p>
         </div>
 
         <button
           onClick={() => setShowTransactionModal(true)}
-          className="bg-primary-accent text-primary-accent-foreground px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2"
+          className="bg-primary-accent text-primary-accent-foreground px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2 w-full sm:w-auto justify-center"
         >
           <span>+</span>
           <span>Add Transaction</span>
@@ -227,60 +227,62 @@ export default function TransactionsPage() {
       </div>
 
       {/* Month Navigation */}
-      <div className="flex items-center justify-center mb-8 bg-primary-card/20 rounded-xl p-4 border border-primary-border/30">
-        <button
-          onClick={goToPreviousMonth}
-          className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors mr-4"
-          aria-label="Previous month"
-        >
-          <FiChevronLeft className="w-5 h-5 text-primary-foreground" />
-        </button>
-
-        <div className="flex items-center space-x-4">
-          {/* Year Picker */}
-          <select
-            value={currentYear}
-            onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-            className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent"
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 mb-6 sm:mb-8 bg-primary-card/20 rounded-xl p-3 sm:p-4 border border-primary-border/30">
+        <div className="flex items-center justify-center w-full sm:w-auto">
+          <button
+            onClick={goToPreviousMonth}
+            className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors"
+            aria-label="Previous month"
           >
-            {Array.from(
-              { length: 10 },
-              (_, i) => new Date().getFullYear() - 5 + i
-            ).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            <FiChevronLeft className="w-5 h-5 text-primary-foreground" />
+          </button>
 
-          {/* Month Picker */}
-          <select
-            value={currentMonth}
-            onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
-            className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent min-w-[120px]"
-          >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i} value={i}>
-                {format(new Date(2024, i), 'MMMM')}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mx-2 sm:mx-4">
+            {/* Year Picker */}
+            <select
+              value={currentYear}
+              onChange={(e) => setCurrentYear(parseInt(e.target.value))}
+              className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent text-sm sm:text-base w-full sm:w-auto"
+            >
+              {Array.from(
+                { length: 10 },
+                (_, i) => new Date().getFullYear() - 5 + i
+              ).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            {/* Month Picker */}
+            <select
+              value={currentMonth}
+              onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
+              className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent text-sm sm:text-base min-w-[120px] w-full sm:w-auto"
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i} value={i}>
+                  {format(new Date(2024, i), 'MMMM')}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={goToCurrentMonth}
+              className="text-sm px-3 py-2 bg-primary-accent/10 text-primary-accent hover:bg-primary-accent/20 rounded-lg transition-colors font-medium w-full sm:w-auto"
+            >
+              Today
+            </button>
+          </div>
 
           <button
-            onClick={goToCurrentMonth}
-            className="text-sm px-3 py-2 bg-primary-accent/10 text-primary-accent hover:bg-primary-accent/20 rounded-lg transition-colors font-medium"
+            onClick={goToNextMonth}
+            className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors"
+            aria-label="Next month"
           >
-            Today
+            <FiChevronRight className="w-5 h-5 text-primary-foreground" />
           </button>
         </div>
-
-        <button
-          onClick={goToNextMonth}
-          className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors ml-4"
-          aria-label="Next month"
-        >
-          <FiChevronRight className="w-5 h-5 text-primary-foreground" />
-        </button>
       </div>
 
       {/* Loading State */}
@@ -321,17 +323,17 @@ export default function TransactionsPage() {
           ) : (
             <div className="space-y-4">
               {/* Month Summary - Clean and Minimal */}
-              <div className="bg-gradient-to-r from-primary-card/40 to-primary-card/20 rounded-xl p-6 border border-primary-border/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-primary-foreground">
+              <div className="bg-gradient-to-r from-primary-card/40 to-primary-card/20 rounded-xl p-4 sm:p-6 border border-primary-border/30">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-primary-foreground">
                     {currentMonthData.month} {currentMonthData.year}
                   </h2>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right w-full sm:w-auto">
                     <div className="text-sm text-primary-muted-foreground mb-1">
                       Net Balance
                     </div>
                     <div
-                      className={`text-2xl font-bold ${
+                      className={`text-xl sm:text-2xl font-bold ${
                         currentMonthData.balance >= 0
                           ? 'text-green-500'
                           : 'text-red-500'
@@ -345,12 +347,12 @@ export default function TransactionsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                     <div className="text-sm text-green-600 font-medium mb-1">
                       Income
                     </div>
-                    <div className="text-xl font-bold text-green-600">
+                    <div className="text-lg sm:text-xl font-bold text-green-600">
                       +${currentMonthData.totalIncome.toFixed(2)}
                     </div>
                   </div>
@@ -358,7 +360,7 @@ export default function TransactionsPage() {
                     <div className="text-sm text-red-600 font-medium mb-1">
                       Expenses
                     </div>
-                    <div className="text-xl font-bold text-red-600">
+                    <div className="text-lg sm:text-xl font-bold text-red-600">
                       -${currentMonthData.totalExpenses.toFixed(2)}
                     </div>
                   </div>
@@ -370,19 +372,22 @@ export default function TransactionsPage() {
                 {currentMonthData.days.map((day) => (
                   <div key={day.dateString} className="space-y-3">
                     {/* Day Header - Clean and Minimal */}
-                    <div className="flex items-center justify-between py-3 px-4 bg-primary-card/30 rounded-lg border-l-4 border-primary-accent">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-semibold text-primary-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-3 sm:px-4 bg-primary-card/30 rounded-lg border-l-4 border-primary-accent gap-2 sm:gap-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
+                        <h3 className="text-base sm:text-lg font-semibold text-primary-foreground">
                           {format(day.date, 'EEEE, MMM d')}
                         </h3>
-                        <span className="text-sm text-primary-muted-foreground">
+                        <span className="text-xs sm:text-sm text-primary-muted-foreground">
                           {day.transactions.length} transaction
                           {day.transactions.length !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
+                        <div className="text-xs sm:text-sm text-primary-muted-foreground mb-1">
+                          Daily Balance
+                        </div>
                         <div
-                          className={`text-lg font-bold ${
+                          className={`text-base sm:text-lg font-bold ${
                             day.balance >= 0 ? 'text-green-500' : 'text-red-500'
                           }`}
                         >
@@ -392,7 +397,7 @@ export default function TransactionsPage() {
                     </div>
 
                     {/* Day Transactions */}
-                    <div className="space-y-2 ml-4">
+                    <div className="space-y-2 ml-0 sm:ml-4">
                       {day.transactions.map((transaction) => (
                         <TransactionCard
                           key={transaction._id}

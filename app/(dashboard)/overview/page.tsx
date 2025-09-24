@@ -73,25 +73,24 @@ export default function OverviewPage() {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-primary-foreground">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground">
             Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}!
           </h1>
-          <p className="text-primary-muted-foreground mt-2">
-            Here&apos;s your financial overview for today,{' '}
+          <p className="text-primary-muted-foreground mt-2 text-sm sm:text-base">
+            Here&apos;s your financial overview for{' '}
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
-              day: 'numeric',
             })}
           </p>
         </div>
 
         <Button
           onClick={() => setShowTransactionModal(true)}
-          className="bg-gradient-to-r from-primary-button to-primary-button-hover"
+          className="bg-gradient-to-r from-primary-button to-primary-button-hover w-full sm:w-auto"
         >
           <FiPlus className="w-4 h-4 mr-2" />
           Add Transaction
@@ -99,26 +98,26 @@ export default function OverviewPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {currentStats.map((stat, index) => (
           <Card key={index} className="bg-primary-card border-primary-border">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-primary-muted-foreground">
                     {stat.title}
                   </p>
-                  <p className="text-2xl font-bold text-primary-foreground mt-2">
+                  <p className="text-xl sm:text-2xl font-bold text-primary-foreground mt-1 sm:mt-2">
                     {stat.value}
                   </p>
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-1 sm:mt-2">
                     {stat.trend === 'up' ? (
-                      <FiTrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                      <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" />
                     ) : (
-                      <FiTrendingDown className="w-4 h-4 text-red-500 mr-1" />
+                      <FiTrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 mr-1" />
                     )}
                     <span
-                      className={`text-sm ${
+                      className={`text-xs sm:text-sm ${
                         stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
                       }`}
                     >
@@ -127,9 +126,9 @@ export default function OverviewPage() {
                   </div>
                 </div>
                 <div
-                  className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.color} rounded-lg flex items-center justify-center ml-3 sm:ml-4 flex-shrink-0`}
                 >
-                  <stat.icon className="w-6 h-6 text-white" />
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
               </div>
             </CardContent>
@@ -138,19 +137,19 @@ export default function OverviewPage() {
       </div>
 
       {/* Charts and Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
         {/* Spending Chart */}
-        <Card className="bg-primary-card border-primary-border">
-          <CardHeader>
-            <CardTitle className="flex items-center text-primary-foreground">
-              <FiPieChart className="w-5 h-5 mr-2" />
+        <Card className="bg-primary-card border-primary-border overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-primary-foreground text-lg sm:text-xl">
+              <FiPieChart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Spending Categories
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Your spending breakdown for this month
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <SpendingCategories
               transactions={allTransactions}
               currency="USD"
@@ -160,67 +159,90 @@ export default function OverviewPage() {
         </Card>
 
         {/* Recent Transactions */}
-        <Card className="bg-primary-card border-primary-border">
-          <CardHeader>
-            <CardTitle className="flex items-center text-primary-foreground">
-              <FiCreditCard className="w-5 h-5 mr-2" />
+        <Card className="bg-primary-card border-primary-border flex flex-col min-h-[400px] sm:min-h-[450px] lg:min-h-[500px]">
+          <CardHeader className="pb-3 sm:pb-4 flex-shrink-0">
+            <CardTitle className="flex items-center text-primary-foreground text-lg sm:text-xl">
+              <FiCreditCard className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Recent Transactions
             </CardTitle>
-            <CardDescription>Your latest financial activity</CardDescription>
+            <CardDescription className="text-sm">
+              Your latest financial activity
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentTransactions.map((transaction) => (
-                <div
-                  key={transaction._id}
-                  className="flex items-center justify-between p-3 bg-primary-muted/30 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
+
+          <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
+            {/* Transactions Container - Scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-border scrollbar-track-transparent">
+              <div className="space-y-3 sm:space-y-4 pr-1">
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => (
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        transaction.type === 'income'
-                          ? 'bg-green-100'
-                          : 'bg-red-100'
-                      }`}
+                      key={transaction._id}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-primary-muted/30 rounded-lg gap-2 sm:gap-0 hover:bg-primary-muted/40 transition-colors"
                     >
-                      <FiDollarSign
-                        className={`w-4 h-4 ${
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div
+                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            transaction.type === 'income'
+                              ? 'bg-green-100'
+                              : 'bg-red-100'
+                          }`}
+                        >
+                          <FiDollarSign
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                              transaction.type === 'income'
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-primary-foreground text-sm sm:text-base truncate">
+                            {transaction.description}
+                          </p>
+                          <p className="text-xs sm:text-sm text-primary-muted-foreground">
+                            <span className="capitalize">
+                              {transaction.category}
+                            </span>{' '}
+                            •{' '}
+                            {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
+                      </div>
+                      <p
+                        className={`font-semibold text-sm sm:text-base self-end sm:self-center ${
                           transaction.type === 'income'
                             ? 'text-green-600'
                             : 'text-red-600'
                         }`}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-primary-foreground">
-                        {transaction.description}
-                      </p>
-                      <p className="text-sm text-primary-muted-foreground">
-                        {transaction.category} •{' '}
-                        {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                      >
+                        {transaction.type === 'income' ? '+' : '-'}
+                        {formatCurrency(transaction.amount)}
                       </p>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-primary-muted-foreground">
+                    <FiCreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">No transactions yet</p>
+                    <p className="text-xs mt-1">
+                      Add your first transaction to get started
+                    </p>
                   </div>
-                  <p
-                    className={`font-semibold ${
-                      transaction.type === 'income'
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}
-                  >
-                    {transaction.type === 'income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => router.push('/transactions')}
-            >
-              View All Transactions
-            </Button>
+
+            {/* Button - Always at bottom */}
+            <div className="flex-shrink-0 pt-4 sm:pt-6 border-t border-primary-border/50 mt-4">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push('/transactions')}
+              >
+                View All Transactions
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

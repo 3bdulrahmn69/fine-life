@@ -107,7 +107,7 @@ export default function SpendingCategories({
     }));
 
     categories.sort((a, b) => b.amount - a.amount);
-    setCategoryData(categories.slice(0, 6)); // Show top 6 categories
+    setCategoryData(categories); // Show all categories
   }, [transactions, period]);
 
   if (categoryData.length === 0) {
@@ -126,7 +126,7 @@ export default function SpendingCategories({
   return (
     <div className="space-y-4">
       {/* Pie Chart */}
-      <div className="h-96 w-full spending-pie-chart">
+      <div className="h-64 sm:h-80 lg:h-96 w-full spending-pie-chart">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart
             className="focus:outline-none focus-visible:outline-none"
@@ -140,7 +140,7 @@ export default function SpendingCategories({
               cx="50%"
               cy="50%"
               labelLine={false}
-              outerRadius={120}
+              outerRadius={80}
               fill="#000000"
               dataKey="amount"
               minAngle={3}
@@ -163,6 +163,7 @@ export default function SpendingCategories({
                 border: '1px solid var(--primary-border)',
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                fontSize: '12px',
               }}
             />
           </PieChart>
@@ -170,7 +171,7 @@ export default function SpendingCategories({
       </div>
 
       {/* Custom Legend with Percentages */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
         {categoryData.map((category) => (
           <div
             key={`legend-${category.id}`}
@@ -193,20 +194,20 @@ export default function SpendingCategories({
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary-border">
-        <div className="text-center">
-          <div className="text-sm text-primary-muted-foreground">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-primary-border">
+        <div className="text-center p-2 sm:p-0">
+          <div className="text-xs sm:text-sm text-primary-muted-foreground">
             Categories
           </div>
-          <div className="text-lg font-semibold text-primary-foreground">
+          <div className="text-base sm:text-lg font-semibold text-primary-foreground">
             {categoryData.length}
           </div>
         </div>
-        <div className="text-center">
-          <div className="text-sm text-primary-muted-foreground">
+        <div className="text-center p-2 sm:p-0">
+          <div className="text-xs sm:text-sm text-primary-muted-foreground">
             Avg/Category
           </div>
-          <div className="text-lg font-semibold text-primary-foreground">
+          <div className="text-base sm:text-lg font-semibold text-primary-foreground">
             {formatCurrency(totalExpenses / categoryData.length, currency)}
           </div>
         </div>

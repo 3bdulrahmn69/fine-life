@@ -63,8 +63,7 @@ export default function SettingsPage() {
           <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
               <BackButton
-                href="/"
-                label="Back to Dashboard"
+                label="Back"
                 variant="ghost"
                 className="text-primary-text hover:text-primary-foreground"
               />

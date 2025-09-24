@@ -182,6 +182,28 @@ html {
   scrollbar-darkshadow-color: var(--primary-background);
 }
 
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--primary-border);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-muted-foreground);
+}
+
 /* Custom gradient utilities for hero section */
 .bg-gradient-radial {
   background: radial-gradient(circle, var(--tw-gradient-stops));
