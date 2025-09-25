@@ -22,6 +22,16 @@ html {
   --primary-muted-foreground: oklch(45% 0.05 150);
   --primary-accent: oklch(72% 0.22 140); /* accent green */
   --primary-accent-foreground: oklch(99% 0.01 150);
+
+  /* Semantic Colors */
+  --destructive: oklch(55% 0.22 10); /* red for errors */
+  --destructive-foreground: oklch(100% 0 0); /* white text on destructive */
+  --success: oklch(65% 0.22 140); /* green for success */
+  --success-foreground: oklch(100% 0 0); /* white text on success */
+  --warning: oklch(75% 0.18 70); /* yellow/orange for warnings */
+  --warning-foreground: oklch(20% 0.15 25); /* dark text on warning */
+  --info: oklch(65% 0.18 220); /* blue for info */
+  --info-foreground: oklch(100% 0 0); /* white text on info */
 }
 
 .dark {
@@ -41,6 +51,16 @@ html {
   --primary-muted-foreground: oklch(70% 0.04 150);
   --primary-accent: oklch(58% 0.2 140); /* emerald accent */
   --primary-accent-foreground: oklch(99% 0.01 150);
+
+  /* Semantic Colors */
+  --destructive: oklch(60% 0.22 10); /* brighter red for dark theme */
+  --destructive-foreground: oklch(100% 0 0); /* white text on destructive */
+  --success: oklch(65% 0.22 140); /* green for success */
+  --success-foreground: oklch(100% 0 0); /* white text on success */
+  --warning: oklch(75% 0.18 70); /* yellow/orange for warnings */
+  --warning-foreground: oklch(20% 0.15 25); /* dark text on warning */
+  --info: oklch(65% 0.18 220); /* blue for info */
+  --info-foreground: oklch(100% 0 0); /* white text on info */
 }
 
 .life {
@@ -60,6 +80,16 @@ html {
   --primary-muted-foreground: oklch(35% 0.15 270); /* rich violet */
   --primary-accent: oklch(65% 0.22 140); /* emerald green */
   --primary-accent-foreground: oklch(12% 0.12 25); /* warm dark */
+
+  /* Semantic Colors */
+  --destructive: oklch(55% 0.25 10); /* coral red for life theme */
+  --destructive-foreground: oklch(100% 0 0); /* white text on destructive */
+  --success: oklch(65% 0.22 140); /* green for success */
+  --success-foreground: oklch(12% 0.12 25); /* dark text on success */
+  --warning: oklch(75% 0.18 70); /* yellow/orange for warnings */
+  --warning-foreground: oklch(20% 0.15 25); /* dark text on warning */
+  --info: oklch(65% 0.18 220); /* blue for info */
+  --info-foreground: oklch(12% 0.12 25); /* dark text on info */
 }
 
 body {
@@ -85,6 +115,16 @@ body {
   --color-primary-muted-foreground: var(--primary-muted-foreground);
   --color-primary-accent: var(--primary-accent);
   --color-primary-accent-foreground: var(--primary-accent-foreground);
+
+  /* Semantic Colors */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
 }
 
 @layer base {

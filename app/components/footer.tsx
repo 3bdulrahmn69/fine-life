@@ -11,7 +11,11 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-export default function Footer() {
+interface FooterProps {
+  simple?: boolean;
+}
+
+export default function Footer({ simple = false }: FooterProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -59,6 +63,64 @@ export default function Footer() {
     { value: 'system', icon: FiMonitor, label: 'System' },
     { value: 'life', icon: BiHeart, label: 'Life' },
   ];
+
+  if (simple) {
+    return (
+      <footer className="bg-primary-card/30 border-t border-primary-border">
+        <div className="container mx-auto px-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            {/* Brand Section */}
+            <div className="flex items-center space-x-3 justify-center md:justify-start">
+              <div className="w-6 h-6 bg-gradient-to-br from-primary-button to-primary-button-hover rounded-md flex items-center justify-center">
+                <BiHeart className="w-4 h-4 text-primary-button-foreground" />
+              </div>
+              <span className="text-sm text-primary-muted-foreground">
+                Fine Life - Transform Your Financial Future
+              </span>
+            </div>
+
+            {/* Developer Attribution - Centered */}
+            <div className="flex justify-center">
+              <span className="text-sm text-primary-muted-foreground text-center">
+                Developed by{' '}
+                <a
+                  href="https://3bdulrahmn.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-accent hover:text-primary-accent/80 transition-colors font-medium"
+                >
+                  Abdulrahman Moussa
+                </a>
+              </span>
+            </div>
+
+            {/* Theme Toggle */}
+            <div className="flex justify-center md:justify-end">
+              {mounted && (
+                <div className="flex items-center gap-1 bg-primary-background/50 rounded-lg p-1 border border-primary-border">
+                  {themeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setTheme(option.value)}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        theme === option.value
+                          ? 'bg-primary-accent text-primary-accent-foreground shadow-sm'
+                          : 'text-primary-text hover:text-primary-accent hover:bg-primary-accent/10'
+                      }`}
+                      title={option.label}
+                      aria-label={`Switch to ${option.label} theme`}
+                    >
+                      <option.icon className="w-4 h-4" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-primary-card/30 border-t border-primary-border">
@@ -157,8 +219,20 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t border-primary-border">
-          <div className="flex items-center gap-4 text-xs text-primary-text">
+          <div className="flex flex-col md:flex-row items-center gap-4 text-xs text-primary-text">
             <span>© {currentYear} Fine Life. All rights reserved.</span>
+            <span className="hidden md:block">•</span>
+            <span>
+              Developed by{' '}
+              <a
+                href="https://3bdulrahmn.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-accent hover:text-primary-accent/80 transition-colors font-medium"
+              >
+                Abdulrahman Moussa
+              </a>
+            </span>
           </div>
 
           {/* Theme Toggle & Social Links */}

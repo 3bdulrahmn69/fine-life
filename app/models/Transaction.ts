@@ -38,6 +38,11 @@ const transactionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    automaticTransactionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AutomaticTransaction',
+      required: false,
+    },
     type: {
       type: String,
       enum: Object.values(TransactionType),

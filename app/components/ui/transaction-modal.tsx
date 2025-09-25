@@ -5,12 +5,14 @@ import { useSession } from 'next-auth/react';
 import Modal from './modal';
 import TransactionForm from './transaction-form';
 import { TransactionFormData, Transaction } from '../../types/transaction';
+import { CurrencyCode } from '../../lib/currency';
 
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   editingTransaction?: Transaction | null;
+  currency?: CurrencyCode;
 }
 
 export default function TransactionModal({
@@ -18,6 +20,7 @@ export default function TransactionModal({
   onClose,
   onSuccess,
   editingTransaction,
+  currency = 'USD',
 }: TransactionModalProps) {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +80,7 @@ export default function TransactionModal({
     >
       <TransactionForm
         initialData={editingTransaction || undefined}
-        currency="USD"
+        currency={currency}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={isSubmitting}

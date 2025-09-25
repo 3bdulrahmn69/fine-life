@@ -4,10 +4,23 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import { Transaction, TransactionType } from '../../types/transaction';
-import { CurrencyCode } from '../../lib/currency';
 import TransactionCard from '../../components/ui/transaction-card';
 import TransactionModal from '../../components/ui/transaction-modal';
-import { FiChevronLeft, FiChevronRight, FiBarChart } from 'react-icons/fi';
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiBarChart,
+  FiRepeat,
+} from 'react-icons/fi';
+import {
+  AutomaticTransaction,
+  AutomaticTransactionFormData,
+} from '../../types/automatic-transaction';
+import AutoTransactionForm from '../../components/ui/auto-transaction-form';
+import AutoTransactionList from '../../components/ui/auto-transaction-list';
+import Modal from '../../components/ui/modal';
+import ConfirmModal from '../../components/ui/confirm-modal';
+import { useUserPreferences } from '../../hooks/useUserPreferences';
 
 interface MonthlyGroup {
   month: string;
@@ -29,6 +42,7 @@ interface DailyGroup {
 
 export default function TransactionsPage() {
   const { data: session } = useSession();
+  const { preferences } = useUserPreferences();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [groupedTransactions, setGroupedTransactions] = useState<
     MonthlyGroup[]
@@ -37,9 +51,28 @@ export default function TransactionsPage() {
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currency] = useState<CurrencyCode>('USD'); // TODO: Get from user preferences
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+  // Automatic transactions state
+  const [showAutoTransactionsModal, setShowAutoTransactionsModal] =
+    useState(false);
+  const [showAutoTransactionForm, setShowAutoTransactionForm] = useState(false);
+  const [editingAutoTransaction, setEditingAutoTransaction] =
+    useState<AutomaticTransaction | null>(null);
+  const [isSubmittingAuto, setIsSubmittingAuto] = useState(false);
+  const [autoTransactionRefresh, setAutoTransactionRefresh] = useState(0);
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    transactionId: string | null;
+    transactionDescription: string;
+  }>({
+    isOpen: false,
+    transactionId: null,
+    transactionDescription: '',
+  });
 
   // Get current month data
   const currentMonthData = groupedTransactions.find(
@@ -174,10 +207,18 @@ export default function TransactionsPage() {
   };
 
   // Handle delete
-  const handleDelete = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) {
-      return;
-    }
+  const handleDeleteClick = (transactionId: string) => {
+    const transaction = transactions.find((t) => t._id === transactionId);
+    setDeleteConfirm({
+      isOpen: true,
+      transactionId: transactionId,
+      transactionDescription: transaction?.description || 'this transaction',
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const transactionId = deleteConfirm.transactionId;
+    if (!transactionId) return;
 
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
@@ -186,11 +227,93 @@ export default function TransactionsPage() {
 
       if (response.ok) {
         await fetchTransactions(); // Refresh the list
+        setDeleteConfirm({
+          isOpen: false,
+          transactionId: null,
+          transactionDescription: '',
+        });
       } else {
         console.error('Error deleting transaction');
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({
+      isOpen: false,
+      transactionId: null,
+      transactionDescription: '',
+    });
+  };
+
+  // Automatic transaction handlers
+  const handleManageAutoTransactions = () => {
+    setEditingAutoTransaction(null);
+    setShowAutoTransactionForm(false); // Show list first, not form
+    setShowAutoTransactionsModal(true);
+  };
+
+  const handleEditAutoTransaction = (transaction: AutomaticTransaction) => {
+    setEditingAutoTransaction(transaction);
+    setShowAutoTransactionForm(true);
+  };
+
+  const handleCloseAutoTransactionForm = () => {
+    setShowAutoTransactionForm(false);
+    setEditingAutoTransaction(null);
+  };
+
+  const handleCloseAutoTransactionsModal = () => {
+    setShowAutoTransactionsModal(false);
+    setShowAutoTransactionForm(false);
+    setEditingAutoTransaction(null);
+  };
+
+  const handleSubmitAutoTransaction = async (
+    formData: AutomaticTransactionFormData
+  ) => {
+    if (!session?.user?.id) {
+      return;
+    }
+
+    try {
+      setIsSubmittingAuto(true);
+
+      const endpoint = editingAutoTransaction
+        ? `/api/automatic-transactions/${editingAutoTransaction._id}`
+        : '/api/automatic-transactions';
+
+      const method = editingAutoTransaction ? 'PUT' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.message || 'Failed to save automatic transaction'
+        );
+      }
+
+      // Close form and refresh list
+      handleCloseAutoTransactionForm();
+      setAutoTransactionRefresh((prev) => prev + 1);
+    } catch (error) {
+      console.error('Error saving automatic transaction:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to save automatic transaction'
+      );
+    } finally {
+      setIsSubmittingAuto(false);
     }
   };
 
@@ -205,7 +328,7 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+    <>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
         <div>
@@ -217,13 +340,22 @@ export default function TransactionsPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowTransactionModal(true)}
-          className="bg-primary-accent text-primary-accent-foreground px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2 w-full sm:w-auto justify-center"
-        >
-          <span>+</span>
-          <span>Add Transaction</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setShowTransactionModal(true)}
+            className="bg-primary-accent text-primary-accent-foreground px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2 justify-center"
+          >
+            <span>+</span>
+            <span>Add Transaction</span>
+          </button>
+          <button
+            onClick={handleManageAutoTransactions}
+            className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center space-x-2 justify-center"
+          >
+            <FiRepeat className="w-4 h-4" />
+            <span>Manage Auto Transactions</span>
+          </button>
+        </div>
       </div>
 
       {/* Month Navigation */}
@@ -402,9 +534,9 @@ export default function TransactionsPage() {
                         <TransactionCard
                           key={transaction._id}
                           transaction={transaction}
-                          currency={currency}
+                          currency={preferences.currency}
                           onEdit={handleEdit}
-                          onDelete={handleDelete}
+                          onDelete={handleDeleteClick}
                         />
                       ))}
                     </div>
@@ -415,6 +547,31 @@ export default function TransactionsPage() {
           )}
         </div>
       )}
+
+      {/* Automatic Transactions Modal */}
+      <Modal
+        isOpen={showAutoTransactionsModal}
+        onClose={handleCloseAutoTransactionsModal}
+        title="Manage Automatic Transactions"
+        size="xl"
+      >
+        {showAutoTransactionForm ? (
+          <AutoTransactionForm
+            initialData={editingAutoTransaction || undefined}
+            currency={preferences.currency}
+            onSubmit={handleSubmitAutoTransaction}
+            onCancel={handleCloseAutoTransactionForm}
+            isSubmitting={isSubmittingAuto}
+          />
+        ) : (
+          <AutoTransactionList
+            onCreateNew={() => setShowAutoTransactionForm(true)}
+            onEdit={handleEditAutoTransaction}
+            refreshTrigger={autoTransactionRefresh}
+            currency={preferences.currency}
+          />
+        )}
+      </Modal>
 
       {/* Transaction Modal */}
       <TransactionModal
@@ -427,7 +584,20 @@ export default function TransactionsPage() {
           fetchTransactions();
         }}
         editingTransaction={editingTransaction}
+        currency={preferences.currency}
       />
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Transaction"
+        message={`Are you sure you want to delete "${deleteConfirm.transactionDescription}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </>
   );
 }

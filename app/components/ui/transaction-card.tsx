@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Transaction, TransactionType } from '../../types/transaction';
 import { getCategoryById, getSubcategoryById } from '../../data/categories';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
@@ -21,6 +22,7 @@ export default function TransactionCard({
   onDelete,
   showActions = true,
 }: TransactionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const category = getCategoryById(transaction.category);
   const subcategory = transaction.subcategory
     ? getSubcategoryById(transaction.category, transaction.subcategory)
@@ -29,10 +31,17 @@ export default function TransactionCard({
   const isIncome = transaction.type === TransactionType.INCOME;
   const amountDisplay = isIncome ? transaction.amount : -transaction.amount;
 
+  const hasNotes = transaction.notes && transaction.notes.trim().length > 0;
+
   return (
-    <div className="bg-primary-card rounded-lg border border-primary-border p-3 sm:p-4 hover:shadow-md transition-shadow">
+    <div className="bg-primary-card rounded-lg border border-primary-border p-3 sm:p-4 hover:shadow-md transition-all duration-200">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
-        <div className="flex items-center space-x-3 flex-1">
+        <div
+          className={`flex items-center space-x-3 flex-1 ${
+            hasNotes ? 'cursor-pointer' : ''
+          }`}
+          onClick={hasNotes ? () => setIsExpanded(!isExpanded) : undefined}
+        >
           {/* Category Icon */}
           <div
             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white flex-shrink-0"
@@ -99,19 +108,42 @@ export default function TransactionCard({
               </span>
             </div>
 
-            {/* Notes */}
-            {transaction.notes && (
-              <p className="mt-2 text-xs sm:text-sm text-primary-muted-foreground italic">
-                {transaction.notes}
-              </p>
+            {/* Notes Arrow */}
+            {hasNotes && (
+              <div className="mt-3 flex justify-start">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-accent/10 hover:bg-primary-accent/20 text-primary-accent transition-all duration-200 hover:scale-105"
+                  title={isExpanded ? 'Hide notes' : 'Show notes'}
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
         </div>
 
         {/* Actions */}
-        {showActions && (onEdit || onDelete) && (
+        {showActions && ((onEdit && !transaction.isAutomatic) || onDelete) && (
           <div className="flex items-center space-x-2 sm:ml-4 self-end sm:self-start">
-            {onEdit && (
+            {onEdit && !transaction.isAutomatic && (
               <button
                 onClick={() => onEdit(transaction)}
                 className="p-1.5 sm:p-1 text-primary-muted-foreground hover:text-primary-accent transition-colors rounded-md hover:bg-primary-accent/10"
@@ -156,6 +188,20 @@ export default function TransactionCard({
           </div>
         )}
       </div>
+
+      {/* Expanded Notes */}
+      {isExpanded && hasNotes && (
+        <div className="mt-4 pt-4 border-t border-primary-border/50">
+          <div>
+            <h4 className="text-sm font-medium text-primary-foreground mb-2">
+              Notes:
+            </h4>
+            <div className="bg-primary-muted/20 rounded-lg p-3 text-sm text-primary-foreground whitespace-pre-wrap">
+              {transaction.notes}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

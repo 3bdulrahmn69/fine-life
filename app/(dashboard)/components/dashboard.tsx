@@ -8,6 +8,8 @@ import { FiSettings, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { BiHeart } from 'react-icons/bi';
 import Link from 'next/link';
 import AuthGuard from '../../auth/auth-guard';
+import Footer from '../../components/footer';
+import Container from '../../components/ui/container';
 
 interface DashboardProps {
   children: React.ReactNode;
@@ -33,7 +35,7 @@ export default function Dashboard({ children }: DashboardProps) {
 
   return (
     <AuthGuard requireAuth={true} redirectTo="/auth/signin">
-      <div className="min-h-screen bg-primary-background">
+      <div className="min-h-screen bg-primary-background flex flex-col">
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div
@@ -233,9 +235,12 @@ export default function Dashboard({ children }: DashboardProps) {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Container size="xl" padding="sm" className="flex-1">
           {children}
-        </main>
+        </Container>
+
+        {/* Footer */}
+        <Footer simple={true} />
       </div>
     </AuthGuard>
   );

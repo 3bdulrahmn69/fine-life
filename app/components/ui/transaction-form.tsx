@@ -33,7 +33,7 @@ export default function TransactionForm({
     subcategory: initialData?.subcategory || '',
     notes: initialData?.notes || '',
     isMandatory: initialData?.isMandatory || false,
-    isAutomatic: initialData?.isAutomatic || false,
+    isAutomatic: false, // Always false for regular transactions
     type: initialData?.type || TransactionType.EXPENSE,
     date: initialData?.date
       ? new Date(initialData.date).toISOString().slice(0, 16)
@@ -240,23 +240,6 @@ export default function TransactionForm({
             className="ml-2 block text-sm text-primary-foreground"
           >
             This is a mandatory expense (essential for living)
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isAutomatic"
-            checked={formData.isAutomatic}
-            onChange={(e) => updateFormData('isAutomatic', e.target.checked)}
-            disabled={isSubmitting}
-            className="h-4 w-4 text-primary-accent focus:ring-primary-accent border-primary-border rounded"
-          />
-          <label
-            htmlFor="isAutomatic"
-            className="ml-2 block text-sm text-primary-foreground"
-          >
-            This is an automatic/recurring transaction
           </label>
         </div>
       </div>

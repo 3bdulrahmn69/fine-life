@@ -8,6 +8,7 @@ import { PageLoading } from '../../components/ui/spinner';
 import { FiUser, FiShield, FiSettings, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import BackButton from '../../components/ui/back-button';
+import Container from '../../components/ui/container';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -73,8 +74,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
 
   return (
     <div className="min-h-screen bg-primary-background">
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Container size="xl" padding="lg" className="py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
@@ -83,8 +83,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                 {/* Back Button */}
                 <div className="mb-4 pb-4 border-b border-primary-border">
                   <BackButton
-                    href="/settings"
-                    label="Back to Settings"
+                    label="Back"
                     variant="ghost"
                     className="text-primary-text hover:text-primary-foreground w-full justify-start"
                   />
@@ -142,7 +141,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
             {children}
           </div>
         </div>
-      </main>
+      </Container>
     </div>
   );
 }

@@ -8,12 +8,15 @@ import {
   useEffect,
   ReactNode,
 } from 'react';
+import { FiSearch } from 'react-icons/fi';
 import { cn } from '../../lib/utils';
 
 interface DropdownContextType {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const DropdownContext = createContext<DropdownContextType | undefined>(
@@ -37,6 +40,9 @@ interface DropdownContentProps {
   className?: string;
   align?: 'start' | 'center' | 'end';
   side?: 'top' | 'bottom' | 'left' | 'right';
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 interface DropdownItemProps
@@ -47,6 +53,7 @@ interface DropdownItemProps
 
 const Dropdown = ({ children, className }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -87,8 +94,23 @@ const Dropdown = ({ children, className }: DropdownProps) => {
     };
   }, [isOpen]);
 
+  const handleSetIsOpen = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setSearchQuery('');
+    }
+  };
+
   return (
-    <DropdownContext.Provider value={{ isOpen, setIsOpen, triggerRef }}>
+    <DropdownContext.Provider
+      value={{
+        isOpen,
+        setIsOpen: handleSetIsOpen,
+        triggerRef,
+        searchQuery,
+        setSearchQuery,
+      }}
+    >
       <div className={cn('relative inline-block', className)} ref={dropdownRef}>
         {children}
       </div>
@@ -142,13 +164,32 @@ const DropdownContent = ({
   className,
   align = 'center',
   side = 'bottom',
+  searchable = false,
+  searchPlaceholder = 'Search...',
+  onSearchChange,
 }: DropdownContentProps) => {
   const context = useContext(DropdownContext);
   if (!context) {
     throw new Error('DropdownContent must be used within a Dropdown');
   }
 
-  const { isOpen } = context;
+  const { isOpen, searchQuery, setSearchQuery } = context;
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchable && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 100);
+    }
+  }, [isOpen, searchable]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (onSearchChange) {
+      onSearchChange(query);
+    }
+  };
 
   const alignmentClasses = {
     start: 'left-0',
@@ -168,7 +209,7 @@ const DropdownContent = ({
   return (
     <div
       className={cn(
-        'absolute z-50 min-w-[8rem] overflow-hidden rounded-lg border border-primary-border bg-primary-card p-1 shadow-lg',
+        'absolute z-50 min-w-[8rem] overflow-y-auto rounded-lg border border-primary-border bg-primary-card shadow-lg',
         'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
         sideClasses[side],
         alignmentClasses[align],
@@ -177,7 +218,22 @@ const DropdownContent = ({
       role="menu"
       aria-orientation="vertical"
     >
-      {children}
+      {searchable && (
+        <div className="sticky top-0 z-10 bg-primary-background p-2 border-b border-primary-border">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary-muted-foreground" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-4 py-2 bg-primary-input border border-primary-border rounded-md text-primary-foreground placeholder-primary-muted-foreground focus:border-primary-accent focus:outline-none text-sm"
+            />
+          </div>
+        </div>
+      )}
+      <div className="p-1">{children}</div>
     </div>
   );
 };
@@ -230,6 +286,15 @@ const DropdownSeparator = ({ className }: { className?: string }) => (
     role="separator"
   />
 );
+
+// Custom hook to use dropdown context
+export const useDropdownContext = () => {
+  const context = useContext(DropdownContext);
+  if (!context) {
+    throw new Error('useDropdownContext must be used within a Dropdown');
+  }
+  return context;
+};
 
 export {
   Dropdown,

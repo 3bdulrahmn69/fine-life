@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -8,42 +8,70 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../components/ui/card';
-import { FiSettings, FiDollarSign } from 'react-icons/fi';
+import {
+  FiSettings,
+  FiDollarSign,
+  FiCheck,
+  FiAlertCircle,
+  FiChevronDown,
+} from 'react-icons/fi';
 import ThemeToggle from '../../../components/ui/theme-toggle';
 import SettingsLayout from '../SettingsLayout';
-import { getAllCurrencies, CurrencyCode } from '../../../lib/currency';
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownContent,
+} from '../../../components/ui/dropdown';
+import CurrencyList from '../../../components/ui/currency-list';
+import { useUserPreferences } from '../../../hooks/useUserPreferences';
+import { CurrencyCode, getAllCurrencies } from '../../../lib/currency';
 
 export default function PreferencesPage() {
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('USD');
-  const [isLoading, setIsLoading] = useState(false);
+  const { preferences, isLoading, error, updateCurrency } =
+    useUserPreferences();
+  const [saveStatus, setSaveStatus] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle');
+  const [selectedCurrencyCode, setSelectedCurrencyCode] =
+    useState<CurrencyCode>(preferences.currency);
 
-  const currencies = getAllCurrencies();
+  // Get all currencies and find the selected one
+  const currencies = useMemo(() => getAllCurrencies(), []);
+  const selectedCurrency = currencies.find(
+    (c) => c.currencyCode === selectedCurrencyCode
+  );
 
-  // Load user preferences
-  useEffect(() => {
-    // TODO: Load from user preferences API
-    // For now, default to USD
-    setSelectedCurrency('USD');
-  }, []);
+  const handleCurrencyChange = (currency: CurrencyCode) => {
+    setSelectedCurrencyCode(currency);
+    setSaveStatus('idle');
+  };
 
-  const handleCurrencyChange = async (currency: CurrencyCode) => {
+  const handleSavePreferences = async () => {
     try {
-      setIsLoading(true);
-      setSelectedCurrency(currency);
+      setSaveStatus('saving');
+      await updateCurrency(selectedCurrencyCode);
+      setSaveStatus('saved');
 
-      // TODO: Save to user preferences API
-      // await fetch('/api/user/preferences', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ currency })
-      // });
-
-      console.log('Currency preference saved:', currency);
+      setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Error saving currency preference:', error);
-    } finally {
-      setIsLoading(false);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
+  };
+
+  const hasUnsavedChanges = selectedCurrencyCode !== preferences.currency;
+
+  // Filter currencies based on search query
+  const filterCurrencies = (searchQuery: string) => {
+    if (!searchQuery) return currencies;
+    const query = searchQuery.toLowerCase();
+    return currencies.filter(
+      (currency) =>
+        currency.name.toLowerCase().includes(query) ||
+        currency.code.toLowerCase().includes(query) ||
+        currency.currencyCode.toLowerCase().includes(query)
+    );
   };
 
   return (
@@ -86,34 +114,85 @@ export default function PreferencesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {currencies.map((currency) => (
-                <button
-                  key={currency.currencyCode}
-                  onClick={() => handleCurrencyChange(currency.currencyCode)}
-                  disabled={isLoading}
-                  className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${
-                    selectedCurrency === currency.currencyCode
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
-                  } ${
+            {/* Error Display */}
+            {error && (
+              <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            {/* Currency Dropdown */}
+            <div className="w-full max-w-lg">
+              <Dropdown>
+                <DropdownTrigger
+                  className={`w-full flex items-center justify-between p-3 bg-primary-card border-2 border-primary-border rounded-lg transition-all duration-200 ${
                     isLoading
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'cursor-pointer hover:shadow-sm'
+                      : 'hover:border-primary-accent focus:border-primary-accent focus:outline-none'
                   }`}
+                  asChild
                 >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold">{currency.symbol}</span>
-                    <div>
-                      <div className="font-medium text-sm">{currency.code}</div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {currency.name}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{selectedCurrency?.flag}</span>
+                    <div className="text-left">
+                      <div className="font-medium text-primary-foreground">
+                        {selectedCurrency?.symbol} {selectedCurrency?.code}
+                      </div>
+                      <div className="text-sm text-primary-muted-foreground truncate max-w-[300px]">
+                        {selectedCurrency?.name}
                       </div>
                     </div>
                   </div>
-                </button>
-              ))}
+                  <FiChevronDown className="w-5 h-5 text-primary-muted-foreground" />
+                </DropdownTrigger>
+
+                <DropdownContent
+                  className="w-[400px] max-h-80"
+                  searchable
+                  searchPlaceholder="Search currencies..."
+                >
+                  <CurrencyList
+                    selectedCurrency={selectedCurrencyCode}
+                    onSelect={handleCurrencyChange}
+                    filterFunction={filterCurrencies}
+                  />
+                </DropdownContent>
+              </Dropdown>
             </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-4 border-t border-primary-border">
+            <button
+              onClick={handleSavePreferences}
+              disabled={!hasUnsavedChanges || saveStatus === 'saving'}
+              className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                hasUnsavedChanges && saveStatus !== 'saving'
+                  ? 'bg-primary-accent text-primary-accent-foreground hover:bg-primary-accent/90'
+                  : 'bg-primary-muted text-primary-muted-foreground cursor-not-allowed'
+              }`}
+            >
+              {saveStatus === 'saving' && (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  Saving...
+                </div>
+              )}
+              {saveStatus === 'saved' && (
+                <div className="flex items-center">
+                  <FiCheck className="w-4 h-4 mr-1" />
+                  Saved
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="flex items-center">
+                  <FiAlertCircle className="w-4 h-4 mr-1" />
+                  Error
+                </div>
+              )}
+              {saveStatus === 'idle' && hasUnsavedChanges && 'Save Changes'}
+              {saveStatus === 'idle' && !hasUnsavedChanges && 'Saved'}
+            </button>
           </div>
         </CardContent>
       </Card>
