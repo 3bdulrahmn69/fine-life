@@ -7,9 +7,9 @@ import { AutoTransactionStatus } from '../../../types/automatic-transaction';
 import { AutomaticTransactionService } from '../../../services/automaticTransactionService';
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET /api/automatic-transactions/[id]
