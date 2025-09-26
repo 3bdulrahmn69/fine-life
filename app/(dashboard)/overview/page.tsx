@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
@@ -27,6 +27,10 @@ import { format } from 'date-fns';
 import SpendingCategories from '../../components/ui/spending-categories';
 import TransactionModal from '../../components/ui/transaction-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
+import Container from '../../components/ui/container';
+import MonthYearNavigator from '../../components/ui/month-year-navigator';
+import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
+import { useMonthlyDataCache } from '../../hooks/useDataCache';
 
 export default function OverviewPage() {
   const { data: session } = useSession();
@@ -36,19 +40,120 @@ export default function OverviewPage() {
     useTransactionData();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
 
-  // Calculate stats with real data
+  // Month/Year navigation using custom hook
+  const {
+    selectedMonth,
+    selectedYear,
+    goToPreviousMonth,
+    goToNextMonth,
+    goToCurrentMonth,
+    setMonth,
+    setYear,
+  } = useMonthYearNavigation();
+
+  const [monthlyStats, setMonthlyStats] = useState<any>(null);
+  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
+  const [monthlyRecentTransactions, setMonthlyRecentTransactions] = useState<
+    any[]
+  >([]);
+  const [isLoadingMonthly, setIsLoadingMonthly] = useState(false);
+
+  // Monthly data cache hook
+  const {
+    getCachedMonthlyData,
+    fetchMonthlyData,
+    invalidateMonthlyData,
+    hasCachedMonthlyData,
+  } = useMonthlyDataCache();
+
+  // Fetch monthly data function with caching
+  const loadMonthlyData = async (forceRefresh = false) => {
+    if (!session) return;
+
+    try {
+      setIsLoadingMonthly(true);
+
+      // Check cache first for instant display
+      if (!forceRefresh) {
+        const cachedStats = getCachedMonthlyData(
+          selectedYear,
+          selectedMonth,
+          'stats'
+        );
+        const cachedTransactions = getCachedMonthlyData(
+          selectedYear,
+          selectedMonth,
+          'transactions'
+        );
+        const cachedRecent = getCachedMonthlyData(
+          selectedYear,
+          selectedMonth,
+          'recent'
+        );
+
+        // Set cached data immediately for instant display
+        if (cachedStats) setMonthlyStats(cachedStats);
+        if (cachedTransactions && Array.isArray(cachedTransactions))
+          setMonthlyTransactions(cachedTransactions);
+        if (cachedRecent && Array.isArray(cachedRecent))
+          setMonthlyRecentTransactions(cachedRecent);
+
+        // If we have all cached data, return early
+        if (cachedStats && cachedTransactions && cachedRecent) {
+          setIsLoadingMonthly(false);
+          return;
+        }
+      }
+
+      // Fetch fresh data (with cache)
+      const [statsData, transactionsData, recentData] = await Promise.all([
+        fetchMonthlyData(selectedYear, selectedMonth, 'stats', forceRefresh),
+        fetchMonthlyData(
+          selectedYear,
+          selectedMonth,
+          'transactions',
+          forceRefresh
+        ),
+        fetchMonthlyData(selectedYear, selectedMonth, 'recent', forceRefresh),
+      ]);
+
+      if (statsData) setMonthlyStats(statsData);
+      if (transactionsData && Array.isArray(transactionsData))
+        setMonthlyTransactions(transactionsData);
+      if (recentData && Array.isArray(recentData))
+        setMonthlyRecentTransactions(recentData);
+    } catch (error) {
+      console.error('Error loading monthly data:', error);
+    } finally {
+      setIsLoadingMonthly(false);
+    }
+  };
+
+  // Effect to load monthly data when month/year changes
+  useEffect(() => {
+    loadMonthlyData();
+  }, [session, selectedMonth, selectedYear]);
+
+  // Calculate stats with monthly data
   const currentStats = [
     {
       title: 'Monthly Balance',
-      value: stats ? formatCurrency(stats.balance) : '$0.00',
-      change: stats && stats.balance >= 0 ? '+100%' : '0%',
-      trend: stats && stats.balance >= 0 ? 'up' : 'down',
+      value: monthlyStats
+        ? formatCurrency(monthlyStats.balance, preferences.currency)
+        : '$0.00',
+      change: monthlyStats && monthlyStats.balance >= 0 ? '+100%' : '0%',
+      trend: monthlyStats && monthlyStats.balance >= 0 ? 'up' : 'down',
       icon: BiWallet,
-      color: stats && stats.balance >= 0 ? 'bg-green-500' : 'bg-red-500',
+      color:
+        monthlyStats && monthlyStats.balance >= 0
+          ? 'bg-green-500'
+          : 'bg-red-500',
     },
     {
       title: 'Monthly Income',
-      value: stats ? formatCurrency(stats.totalIncome) : '$0.00',
+      value: monthlyStats
+        ? formatCurrency(monthlyStats.totalIncome, preferences.currency)
+        : '$0.00',
       change: '+0%', // TODO: Calculate change from previous month
       trend: 'up',
       icon: FiTrendingUp,
@@ -56,7 +161,9 @@ export default function OverviewPage() {
     },
     {
       title: 'Monthly Expenses',
-      value: stats ? formatCurrency(stats.totalExpenses) : '$0.00',
+      value: monthlyStats
+        ? formatCurrency(monthlyStats.totalExpenses, preferences.currency)
+        : '$0.00',
       change: '0%', // TODO: Calculate change from previous month
       trend: 'down',
       icon: FiTrendingDown,
@@ -64,7 +171,7 @@ export default function OverviewPage() {
     },
     {
       title: 'Transactions',
-      value: stats ? stats.transactionCount.toString() : '0',
+      value: monthlyStats ? monthlyStats.transactionCount.toString() : '0',
       change: '+0%',
       trend: 'up',
       icon: FiTarget,
@@ -73,7 +180,7 @@ export default function OverviewPage() {
   ];
 
   return (
-    <>
+    <Container>
       <div className="space-y-8">
         {/* Welcome Section */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 mb-2">
@@ -83,11 +190,7 @@ export default function OverviewPage() {
             </h1>
             <p className="text-primary-muted-foreground text-sm sm:text-base leading-relaxed">
               Here&apos;s your financial overview for{' '}
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-              })}
+              {format(new Date(selectedYear, selectedMonth), 'MMMM yyyy')}
             </p>
           </div>
 
@@ -98,7 +201,19 @@ export default function OverviewPage() {
             <FiPlus className="w-4 h-4 mr-2" />
             Add Transaction
           </Button>
-        </div>{' '}
+        </div>
+
+        {/* Month/Year Navigation */}
+        <MonthYearNavigator
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onPreviousMonth={goToPreviousMonth}
+          onNextMonth={goToNextMonth}
+          onCurrentMonth={goToCurrentMonth}
+          onMonthChange={setMonth}
+          onYearChange={setYear}
+          showDropdowns={true}
+        />
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {currentStats.map((stat, index) => (
@@ -156,11 +271,22 @@ export default function OverviewPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <SpendingCategories
-                transactions={allTransactions}
-                currency={preferences.currency}
-                period="month"
-              />
+              {isLoadingMonthly && monthlyTransactions.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent mb-2"></div>
+                    <p className="text-primary-muted-foreground text-sm">
+                      Loading spending data...
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <SpendingCategories
+                  transactions={monthlyTransactions}
+                  currency={preferences.currency}
+                  period="month"
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -180,8 +306,18 @@ export default function OverviewPage() {
               {/* Transactions Container - Scrollable */}
               <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-border scrollbar-track-transparent">
                 <div className="space-y-4 pr-1">
-                  {recentTransactions.length > 0 ? (
-                    recentTransactions.map((transaction) => (
+                  {isLoadingMonthly &&
+                  monthlyRecentTransactions.length === 0 ? (
+                    <div className="flex items-center justify-center h-48">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent mb-2"></div>
+                        <p className="text-primary-muted-foreground text-sm">
+                          Loading recent transactions...
+                        </p>
+                      </div>
+                    </div>
+                  ) : monthlyRecentTransactions.length > 0 ? (
+                    monthlyRecentTransactions.map((transaction) => (
                       <div
                         key={transaction._id}
                         className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-primary-muted/30 rounded-lg gap-3 hover:bg-primary-muted/40 transition-colors cursor-pointer"
@@ -263,11 +399,15 @@ export default function OverviewPage() {
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
           onSuccess={() => {
+            // Refresh both general data and monthly data
             refetch();
+            // Invalidate monthly cache and refresh
+            invalidateMonthlyData();
+            loadMonthlyData(true);
           }}
           currency={preferences.currency}
         />
       </div>
-    </>
+    </Container>
   );
 }

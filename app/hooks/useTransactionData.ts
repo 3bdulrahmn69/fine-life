@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Transaction as TransactionType } from '../types/transaction';
+import { useTransactionCache, useStatsCache } from './useDataCache';
 
 interface TransactionStats {
   totalIncome: number;
@@ -27,107 +28,109 @@ export function useTransactionData() {
   const [allTransactions, setAllTransactions] = useState<TransactionType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Use cache hooks
+  const {
+    getCachedTransactions,
+    fetchTransactions,
+    hasCachedData: hasTransactionCache,
+    invalidateTransactions: invalidateTransactionCache,
+  } = useTransactionCache();
+
+  const {
+    getCachedStats,
+    fetchStats,
+    hasCachedData: hasStatsCache,
+    invalidateStats: invalidateStatsCache,
+  } = useStatsCache();
+
   useEffect(() => {
     if (!session) {
       setIsLoading(false);
       return;
     }
 
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
 
-        // Get current month stats
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        // Load transactions (try cache first)
+        let transactionData = getCachedTransactions() as
+          | TransactionType[]
+          | null;
+        if (!transactionData) {
+          transactionData = await fetchTransactions();
+        }
 
-        // Fetch monthly stats
-        const statsResponse = await fetch(
-          `/api/transactions/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`
-        );
+        if (transactionData && Array.isArray(transactionData)) {
+          setAllTransactions(transactionData);
+          // Get recent 5 transactions
+          const recent = transactionData
+            .sort(
+              (a: TransactionType, b: TransactionType) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            )
+            .slice(0, 5);
+          setRecentTransactions(recent);
+        }
 
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
+        // Load stats (try cache first)
+        let statsData = getCachedStats() as TransactionStats | null;
+        if (!statsData) {
+          statsData = await fetchStats();
+        }
+
+        if (statsData) {
           setStats(statsData);
         }
-
-        // Fetch recent transactions (last 5)
-        const transactionsResponse = await fetch('/api/transactions?limit=5');
-
-        if (transactionsResponse.ok) {
-          const transactionsData = await transactionsResponse.json();
-          setRecentTransactions(transactionsData.transactions || []);
-        }
-
-        // Fetch all transactions for spending categories
-        const allTransactionsResponse = await fetch('/api/transactions');
-
-        if (allTransactionsResponse.ok) {
-          const allTransactionsData = await allTransactionsResponse.json();
-          setAllTransactions(allTransactionsData.transactions || []);
-        }
       } catch (error) {
-        console.error('Error fetching transaction data:', error);
+        console.error('Error loading transaction data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [session]);
+    loadData();
+  }, [session, hasTransactionCache, hasStatsCache]);
 
   return {
     stats,
     recentTransactions,
     allTransactions,
     isLoading,
-    refetch: () => {
+    refetch: async () => {
       if (session) {
-        // Re-fetch data
-        const fetchData = async () => {
-          try {
-            setIsLoading(true);
+        try {
+          setIsLoading(true);
 
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const endOfMonth = new Date(
-              now.getFullYear(),
-              now.getMonth() + 1,
-              0
-            );
+          // Invalidate caches and refetch
+          invalidateTransactionCache();
+          invalidateStatsCache();
 
-            const [statsResponse, transactionsResponse] = await Promise.all([
-              fetch(
-                `/api/transactions/stats?startDate=${startOfMonth.toISOString()}&endDate=${endOfMonth.toISOString()}`
-              ),
-              fetch('/api/transactions?limit=5'),
-            ]);
+          // Fetch fresh data
+          const [transactionData, statsData] = await Promise.all([
+            fetchTransactions(true),
+            fetchStats(true),
+          ]);
 
-            if (statsResponse.ok) {
-              const statsData = await statsResponse.json();
-              setStats(statsData);
-            }
-
-            if (transactionsResponse.ok) {
-              const transactionsData = await transactionsResponse.json();
-              setRecentTransactions(transactionsData.transactions || []);
-            }
-
-            // Fetch all transactions
-            const allTransactionsResponse = await fetch('/api/transactions');
-            if (allTransactionsResponse.ok) {
-              const allTransactionsData = await allTransactionsResponse.json();
-              setAllTransactions(allTransactionsData.transactions || []);
-            }
-          } catch (error) {
-            console.error('Error refetching transaction data:', error);
-          } finally {
-            setIsLoading(false);
+          if (transactionData && Array.isArray(transactionData)) {
+            setAllTransactions(transactionData);
+            const recent = transactionData
+              .sort(
+                (a: TransactionType, b: TransactionType) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              )
+              .slice(0, 5);
+            setRecentTransactions(recent);
           }
-        };
 
-        fetchData();
+          if (statsData) {
+            setStats(statsData as TransactionStats);
+          }
+        } catch (error) {
+          console.error('Error refetching transaction data:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     },
   };

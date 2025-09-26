@@ -6,12 +6,9 @@ import { format } from 'date-fns';
 import { Transaction, TransactionType } from '../../types/transaction';
 import TransactionCard from '../../components/ui/transaction-card';
 import TransactionModal from '../../components/ui/transaction-modal';
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiBarChart,
-  FiRepeat,
-} from 'react-icons/fi';
+import { FiBarChart, FiRepeat } from 'react-icons/fi';
+import MonthYearNavigator from '../../components/ui/month-year-navigator';
+import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
 import {
   AutomaticTransaction,
   AutomaticTransactionFormData,
@@ -21,6 +18,7 @@ import AutoTransactionList from '../../components/ui/auto-transaction-list';
 import Modal from '../../components/ui/modal';
 import ConfirmModal from '../../components/ui/confirm-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
+import { useTransactionCache, useCacheUtils } from '../../hooks/useDataCache';
 
 interface MonthlyGroup {
   month: string;
@@ -43,6 +41,15 @@ interface DailyGroup {
 export default function TransactionsPage() {
   const { data: session } = useSession();
   const { preferences } = useUserPreferences();
+  const {
+    getCachedTransactions,
+    fetchTransactions,
+    invalidateTransactions,
+    isLoading: cacheLoading,
+    hasCachedData,
+  } = useTransactionCache();
+  const { invalidateTransactionRelated } = useCacheUtils();
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [groupedTransactions, setGroupedTransactions] = useState<
     MonthlyGroup[]
@@ -51,8 +58,17 @@ export default function TransactionsPage() {
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+  // Month/Year navigation using custom hook
+  const {
+    selectedMonth: currentMonth,
+    selectedYear: currentYear,
+    goToPreviousMonth,
+    goToNextMonth,
+    goToCurrentMonth,
+    setMonth: setCurrentMonth,
+    setYear: setCurrentYear,
+  } = useMonthYearNavigation();
 
   // Automatic transactions state
   const [showAutoTransactionsModal, setShowAutoTransactionsModal] =
@@ -81,47 +97,28 @@ export default function TransactionsPage() {
       group.month === format(new Date(currentYear, currentMonth), 'MMMM')
   );
 
-  // Navigation functions
-  const goToPreviousMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
+  // Navigation functions are now provided by useMonthYearNavigation hook
 
-  const goToNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const goToCurrentMonth = () => {
-    const now = new Date();
-    setCurrentMonth(now.getMonth());
-    setCurrentYear(now.getFullYear());
-  };
-
-  // Fetch transactions with caching check
-  const fetchTransactions = async (forceRefresh = false) => {
-    // Skip if already loaded and not forced refresh
-    if (transactions.length > 0 && !forceRefresh) {
-      return;
-    }
-
+  // Load transactions from cache or fetch
+  const loadTransactions = async (forceRefresh = false) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/transactions');
-      if (response.ok) {
-        const data = await response.json();
-        setTransactions(data.transactions || []);
+
+      // Try to get cached data first
+      if (!forceRefresh && hasCachedData) {
+        const cachedData = getCachedTransactions() as Transaction[];
+        if (cachedData && Array.isArray(cachedData)) {
+          setTransactions(cachedData);
+          setIsLoading(false);
+          return;
+        }
       }
+
+      // Fetch fresh data
+      const data = await fetchTransactions(forceRefresh);
+      setTransactions(data || []);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error('Error loading transactions:', error);
     } finally {
       setIsLoading(false);
     }
@@ -201,7 +198,7 @@ export default function TransactionsPage() {
   // Load transactions on mount only
   useEffect(() => {
     if (session && transactions.length === 0) {
-      fetchTransactions();
+      loadTransactions();
     }
   }, [session]); // Remove transactions dependency to prevent reload loops
 
@@ -210,7 +207,7 @@ export default function TransactionsPage() {
     const handleVisibilityChange = () => {
       // Only fetch if page becomes visible and we have no data
       if (!document.hidden && session && transactions.length === 0) {
-        fetchTransactions();
+        loadTransactions();
       }
     };
 
@@ -247,7 +244,9 @@ export default function TransactionsPage() {
       });
 
       if (response.ok) {
-        await fetchTransactions(true); // Force refresh after delete
+        // Invalidate cache and refresh data
+        invalidateTransactions();
+        await loadTransactions(true);
         setDeleteConfirm({
           isOpen: false,
           transactionId: null,
@@ -380,63 +379,17 @@ export default function TransactionsPage() {
       </div>
 
       {/* Month Navigation */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0 mb-6 sm:mb-8 bg-primary-card/20 rounded-xl p-3 sm:p-4 border border-primary-border/30">
-        <div className="flex items-center justify-center w-full sm:w-auto">
-          <button
-            onClick={goToPreviousMonth}
-            className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors"
-            aria-label="Previous month"
-          >
-            <FiChevronLeft className="w-5 h-5 text-primary-foreground" />
-          </button>
-
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mx-2 sm:mx-4">
-            {/* Year Picker */}
-            <select
-              value={currentYear}
-              onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-              className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent text-sm sm:text-base w-full sm:w-auto"
-            >
-              {Array.from(
-                { length: 10 },
-                (_, i) => new Date().getFullYear() - 5 + i
-              ).map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-
-            {/* Month Picker */}
-            <select
-              value={currentMonth}
-              onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
-              className="bg-primary-card border border-primary-border rounded-lg px-3 py-2 text-primary-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary-accent text-sm sm:text-base min-w-[120px] w-full sm:w-auto"
-            >
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i} value={i}>
-                  {format(new Date(2024, i), 'MMMM')}
-                </option>
-              ))}
-            </select>
-
-            <button
-              onClick={goToCurrentMonth}
-              className="text-sm px-3 py-2 bg-primary-accent/10 text-primary-accent hover:bg-primary-accent/20 rounded-lg transition-colors font-medium w-full sm:w-auto"
-            >
-              Today
-            </button>
-          </div>
-
-          <button
-            onClick={goToNextMonth}
-            className="p-2 rounded-lg hover:bg-primary-card/40 transition-colors"
-            aria-label="Next month"
-          >
-            <FiChevronRight className="w-5 h-5 text-primary-foreground" />
-          </button>
-        </div>
-      </div>
+      <MonthYearNavigator
+        selectedMonth={currentMonth}
+        selectedYear={currentYear}
+        onPreviousMonth={goToPreviousMonth}
+        onNextMonth={goToNextMonth}
+        onCurrentMonth={goToCurrentMonth}
+        onMonthChange={setCurrentMonth}
+        onYearChange={setCurrentYear}
+        showDropdowns={true}
+        className="mb-6 sm:mb-8"
+      />
 
       {/* Loading State */}
       {isLoading && (
@@ -602,7 +555,9 @@ export default function TransactionsPage() {
           setEditingTransaction(null);
         }}
         onSuccess={() => {
-          fetchTransactions(true); // Force refresh after add/edit
+          // Invalidate cache and refresh data
+          invalidateTransactions();
+          loadTransactions(true);
         }}
         editingTransaction={editingTransaction}
         currency={preferences.currency}
