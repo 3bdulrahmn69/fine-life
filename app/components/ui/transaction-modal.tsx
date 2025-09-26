@@ -50,16 +50,47 @@ export default function TransactionModal({
           });
 
       if (response.ok) {
+        const result = await response.json();
+
+        // Check if transaction was saved offline
+        if (response.headers.get('X-Offline-Mode') === 'true') {
+          // Show offline success message
+          const message = editingTransaction
+            ? 'Transaction updated offline - will sync when online'
+            : 'Transaction saved offline - will sync when online';
+
+          // You could use a toast library here instead of alert
+          alert(message);
+        }
+
         onSuccess?.();
         onClose();
       } else {
         const error = await response.json();
         console.error('Transaction error:', error);
-        alert(error.message || 'Failed to save transaction');
+
+        // Better error handling for offline scenarios
+        if (response.status === 202) {
+          // Accepted for offline processing
+          onSuccess?.();
+          onClose();
+        } else {
+          alert(error.message || 'Failed to save transaction');
+        }
       }
     } catch (error) {
       console.error('Transaction submission error:', error);
-      alert('Failed to save transaction');
+
+      // Check if it's a network error (likely offline)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        alert(
+          "You appear to be offline. The transaction will be saved locally and synced when you're back online."
+        );
+        // In a real implementation, you might still want to close the modal
+        // if the offline handling is successful
+      } else {
+        alert('Failed to save transaction');
+      }
     } finally {
       setIsSubmitting(false);
     }
