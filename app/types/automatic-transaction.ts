@@ -8,6 +8,7 @@ export enum RecurrenceType {
 export enum AutoTransactionStatus {
   ACTIVE = 'active',
   PAUSED = 'paused',
+  COMPLETED = 'completed',
 }
 
 export interface AutomaticTransaction {

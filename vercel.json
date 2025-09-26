@@ -4,8 +4,5 @@
       "path": "/api/cron/execute-automatic-transactions",
       "schedule": "0 0 * * *"
     }
-  ],
-  "env": {
-    "CRON_SECRET": "@CRON_SECRET"
-  }
+  ]
 }

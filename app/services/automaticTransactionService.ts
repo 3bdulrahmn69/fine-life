@@ -94,16 +94,17 @@ export class AutomaticTransactionService {
             autoTransaction.endDate &&
             nextExecutionDate > autoTransaction.endDate
           ) {
-            // Don't schedule further executions but keep status as is
-            console.log(
-              `[CRON] Automatic transaction ${autoTransaction._id} has reached its end date - no further executions scheduled`
-            );
+            // Mark as completed - transaction has reached its end date
             await AutomaticTransaction.findByIdAndUpdate(autoTransaction._id, {
+              status: AutoTransactionStatus.COMPLETED,
               lastExecuted: new Date(),
               $inc: { executionCount: 1 },
             });
+            console.log(
+              `[CRON] Automatic transaction ${autoTransaction._id} completed (reached end date)`
+            );
           } else {
-            // Update the automatic transaction with next execution date, keep status unchanged
+            // Update the automatic transaction with next execution date
             await AutomaticTransaction.findByIdAndUpdate(autoTransaction._id, {
               nextExecutionDate,
               lastExecuted: new Date(),
