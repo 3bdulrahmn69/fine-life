@@ -52,6 +52,10 @@ export class AutomaticTransactionService {
 
       for (const autoTransaction of dueTransactions) {
         try {
+          console.log(
+            `[CRON] Processing automatic transaction: ${autoTransaction._id} (${autoTransaction.description})`
+          );
+
           // Create the actual transaction
           const newTransaction = new Transaction({
             userId: autoTransaction.userId,
@@ -60,7 +64,7 @@ export class AutomaticTransactionService {
             category: autoTransaction.category,
             subcategory: autoTransaction.subcategory,
             type: autoTransaction.type,
-            date: new Date(),
+            date: this.normalizeDateToMidnight(new Date()), // Ensure consistent date handling
             notes: autoTransaction.notes
               ? `${autoTransaction.notes} (Auto-generated)`
               : 'Auto-generated transaction',
@@ -70,6 +74,9 @@ export class AutomaticTransactionService {
           });
 
           await newTransaction.save();
+          console.log(
+            `[CRON] Created transaction: ${newTransaction._id} for amount: ${autoTransaction.amount}`
+          );
 
           // Calculate next execution date (always normalized to midnight)
           const nextExecutionDate = this.normalizeDateToMidnight(
@@ -82,45 +89,60 @@ export class AutomaticTransactionService {
             )
           );
 
-          // Check if we should continue (end date check)
+          // Check if transaction has reached its end date
           if (
             autoTransaction.endDate &&
             nextExecutionDate > autoTransaction.endDate
           ) {
-            // Mark as completed
+            // Don't schedule further executions but keep status as is
+            console.log(
+              `[CRON] Automatic transaction ${autoTransaction._id} has reached its end date - no further executions scheduled`
+            );
             await AutomaticTransaction.findByIdAndUpdate(autoTransaction._id, {
-              status: AutoTransactionStatus.ACTIVE,
               lastExecuted: new Date(),
               $inc: { executionCount: 1 },
             });
           } else {
-            // Update the automatic transaction with next execution date
+            // Update the automatic transaction with next execution date, keep status unchanged
             await AutomaticTransaction.findByIdAndUpdate(autoTransaction._id, {
               nextExecutionDate,
               lastExecuted: new Date(),
               $inc: { executionCount: 1 },
             });
+            console.log(
+              `[CRON] Next execution for ${
+                autoTransaction._id
+              }: ${nextExecutionDate.toISOString()}`
+            );
           }
 
           processed++;
           console.log(
-            `Successfully processed automatic transaction: ${autoTransaction.description}`
+            `[CRON] ✓ Successfully processed automatic transaction: ${autoTransaction.description} (${autoTransaction._id})`
           );
         } catch (error) {
           const errorMessage = `Failed to process automatic transaction ${
             autoTransaction._id
-          }: ${error instanceof Error ? error.message : 'Unknown error'}`;
-          console.error(errorMessage);
+          } (${autoTransaction.description}): ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`;
+          console.error(`[CRON] ✗ ${errorMessage}`);
           errors.push(errorMessage);
+
+          // Continue processing other transactions even if one fails
+          continue;
         }
       }
 
+      console.log(
+        `[CRON] Processing complete. Processed: ${processed}, Errors: ${errors.length}`
+      );
       return { processed, errors };
     } catch (error) {
-      const errorMessage = `Failed to process automatic transactions: ${
+      const errorMessage = `Fatal error processing automatic transactions: ${
         error instanceof Error ? error.message : 'Unknown error'
       }`;
-      console.error(errorMessage);
+      console.error(`[CRON] ${errorMessage}`);
       return { processed, errors: [errorMessage] };
     }
   }

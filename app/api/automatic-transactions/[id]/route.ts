@@ -217,7 +217,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
         _id: id,
         userId: session.user.id,
       },
-      { status: AutoTransactionStatus.CANCELLED },
+      { status: AutoTransactionStatus.PAUSED },
       { new: true }
     );
 
@@ -229,13 +229,13 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({
-      message: 'Automatic transaction cancelled successfully',
+      message: 'Automatic transaction paused successfully',
       transaction: autoTransaction,
     });
   } catch (error) {
-    console.error('Error cancelling automatic transaction:', error);
+    console.error('Error pausing automatic transaction:', error);
     return NextResponse.json(
-      { error: 'Failed to cancel automatic transaction' },
+      { error: 'Failed to pause automatic transaction' },
       { status: 500 }
     );
   }

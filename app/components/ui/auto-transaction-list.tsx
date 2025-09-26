@@ -177,8 +177,6 @@ export default function AutoTransactionList({
         return 'text-success bg-success/10 border-success/30';
       case AutoTransactionStatus.PAUSED:
         return 'text-warning bg-warning/10 border-warning/30';
-      case AutoTransactionStatus.CANCELLED:
-        return 'text-destructive bg-destructive/10 border-destructive/30';
       default:
         return 'text-primary-muted bg-primary-card/50 border-primary-border';
     }
