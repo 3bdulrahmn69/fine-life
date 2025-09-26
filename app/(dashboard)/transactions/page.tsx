@@ -106,8 +106,13 @@ export default function TransactionsPage() {
     setCurrentYear(now.getFullYear());
   };
 
-  // Fetch transactions
-  const fetchTransactions = async () => {
+  // Fetch transactions with caching check
+  const fetchTransactions = async (forceRefresh = false) => {
+    // Skip if already loaded and not forced refresh
+    if (transactions.length > 0 && !forceRefresh) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await fetch('/api/transactions');
@@ -193,12 +198,28 @@ export default function TransactionsPage() {
     setGroupedTransactions(sortedGroups);
   }, [transactions]);
 
-  // Load transactions on mount
+  // Load transactions on mount only
   useEffect(() => {
-    if (session) {
+    if (session && transactions.length === 0) {
       fetchTransactions();
     }
-  }, [session]);
+  }, [session]); // Remove transactions dependency to prevent reload loops
+
+  // Prevent unnecessary API calls when page is not visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Only fetch if page becomes visible and we have no data
+      if (!document.hidden && session && transactions.length === 0) {
+        fetchTransactions();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [session, transactions.length]);
 
   // Handle edit
   const handleEdit = (transaction: Transaction) => {
@@ -226,7 +247,7 @@ export default function TransactionsPage() {
       });
 
       if (response.ok) {
-        await fetchTransactions(); // Refresh the list
+        await fetchTransactions(true); // Force refresh after delete
         setDeleteConfirm({
           isOpen: false,
           transactionId: null,
@@ -581,7 +602,7 @@ export default function TransactionsPage() {
           setEditingTransaction(null);
         }}
         onSuccess={() => {
-          fetchTransactions();
+          fetchTransactions(true); // Force refresh after add/edit
         }}
         editingTransaction={editingTransaction}
         currency={preferences.currency}

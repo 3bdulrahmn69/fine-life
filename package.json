@@ -7,7 +7,11 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "npx tsc --noEmit"
+    "type-check": "npx tsc --noEmit",
+    "auto:run": "node ./scripts/run-auto-transactions.js local",
+    "auto:run:prod": "node ./scripts/run-auto-transactions.js production",
+    "test:cron": "node ./scripts/test-cron.js local",
+    "test:cron:prod": "node ./scripts/test-cron.js production"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
