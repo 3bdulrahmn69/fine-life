@@ -105,9 +105,9 @@ export default function FeaturesSection() {
             },
             {
               icon: FiSmartphone,
-              title: 'Mobile First PWA',
+              title: 'Mobile Optimized',
               description:
-                'Native app experience on any device with offline support, push notifications, and seamless cross-device synchronization.',
+                'Responsive design optimized for any device with seamless cross-device synchronization and intuitive touch interfaces.',
               delay: 1000,
             },
             {

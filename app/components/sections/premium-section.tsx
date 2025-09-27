@@ -101,7 +101,7 @@ export default function PremiumSection() {
     'Community price sharing',
     'Basic analytics & reports',
     'Email support',
-    'Offline access',
+    'Cross-device sync',
   ];
 
   return (

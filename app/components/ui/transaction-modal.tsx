@@ -52,17 +52,6 @@ export default function TransactionModal({
       if (response.ok) {
         const result = await response.json();
 
-        // Check if transaction was saved offline
-        if (response.headers.get('X-Offline-Mode') === 'true') {
-          // Show offline success message
-          const message = editingTransaction
-            ? 'Transaction updated offline - will sync when online'
-            : 'Transaction saved offline - will sync when online';
-
-          // You could use a toast library here instead of alert
-          alert(message);
-        }
-
         onSuccess?.();
         onClose();
       } else {

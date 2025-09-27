@@ -36,7 +36,7 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p className="mb-4">
-              Fine Life is a Progressive Web App that provides:
+              Fine Life is a web application that provides:
             </p>
             <ul className="list-disc pl-6 mb-4">
               <li>Personal expense and income tracking</li>
@@ -44,7 +44,6 @@ export default function TermsPage() {
               <li>Financial analytics and reporting</li>
               <li>Community price sharing (anonymous)</li>
               <li>Multi-device synchronization</li>
-              <li>Offline functionality</li>
             </ul>
           </section>
 
@@ -242,7 +241,8 @@ export default function TermsPage() {
               <li>Service may be temporarily unavailable for maintenance</li>
               <li>We reserve the right to modify or discontinue features</li>
               <li>
-                Offline functionality is available when internet is unavailable
+                Multi-device synchronization keeps your data accessible across
+                platforms
               </li>
               <li>We will provide notice for significant service changes</li>
             </ul>

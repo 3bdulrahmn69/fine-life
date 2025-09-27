@@ -33,7 +33,7 @@ export default function FAQSection() {
       altIcon: FiCheckCircle,
       question: 'Is Fine Life really free? What are the limitations?',
       answer:
-        'Yes! Our free plan includes unlimited expense tracking, 5 budgets, community price sharing, basic analytics, and offline access. Premium features like unlimited budgets, advanced analytics, and priority support are available for $4.99/month. No hidden fees or credit card required to start.',
+        'Yes! Our free plan includes unlimited expense tracking, 5 budgets, community price sharing, basic analytics, and cross-device sync. Premium features like unlimited budgets, advanced analytics, and priority support are available for $4.99/month. No hidden fees or credit card required to start.',
       category: 'Pricing',
       color: 'from-green-500 to-emerald-500',
       delay: '0.1s',
@@ -41,9 +41,9 @@ export default function FAQSection() {
     {
       icon: BiSync,
       altIcon: FiCheckCircle,
-      question: 'Can I use Fine Life offline and across multiple devices?',
+      question: 'Can I use Fine Life across multiple devices?',
       answer:
-        'Absolutely! Fine Life is a PWA that works offline. Add expenses, view budgets, and access recent data without internet. Everything syncs automatically when you reconnect. Your data is available on any device - phone, tablet, or desktop - with real-time synchronization.',
+        'Absolutely! Fine Life provides seamless multi-device synchronization. Your data is available on any device - phone, tablet, or desktop - with real-time synchronization across all platforms.',
       category: 'Features',
       color: 'from-purple-500 to-pink-500',
       delay: '0.2s',
@@ -73,7 +73,7 @@ export default function FAQSection() {
       altIcon: FiCheckCircle,
       question: 'What devices and browsers does Fine Life support?',
       answer:
-        "Fine Life works on any modern device with a web browser. It's fully responsive and optimized for mobile, tablet, and desktop. Install it as a PWA on your phone for a native app experience with offline access, push notifications, and home screen icon.",
+        "Fine Life works on any modern device with a web browser. It's fully responsive and optimized for mobile, tablet, and desktop, providing a smooth user experience across all platforms.",
       category: 'Technical',
       color: 'from-indigo-500 to-purple-500',
       delay: '0.5s',

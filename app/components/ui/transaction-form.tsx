@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  FiTrendingDown,
-  FiTrendingUp,
-  FiWifiOff,
-  FiCheck,
-} from 'react-icons/fi';
+import { FiTrendingDown, FiTrendingUp, FiCheck } from 'react-icons/fi';
 import {
   TransactionFormData,
   TransactionType,
@@ -31,7 +26,6 @@ export default function TransactionForm({
   onCancel,
   isSubmitting = false,
 }: TransactionFormProps) {
-  const [isOnline, setIsOnline] = useState(true);
   const [formData, setFormData] = useState<TransactionFormData>({
     amount: initialData?.amount.toString() || '',
     description: initialData?.description || '',
@@ -56,22 +50,6 @@ export default function TransactionForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Online/offline detection
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    setIsOnline(navigator.onLine);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -266,20 +244,6 @@ export default function TransactionForm({
         </div>
       </div>
 
-      {/* Offline Status Indicator */}
-      {!isOnline && (
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
-          <div className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
-            <FiWifiOff className="w-4 h-4" />
-            <span className="text-sm font-medium">Working Offline</span>
-          </div>
-          <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-            Your transaction will be saved locally and synced when you're back
-            online.
-          </p>
-        </div>
-      )}
-
       {/* Form Actions */}
       <div className="flex space-x-4 pt-4">
         <button
@@ -293,17 +257,10 @@ export default function TransactionForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`flex-1 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-            isOnline
-              ? 'bg-primary-accent text-primary-accent-foreground hover:bg-primary-accent/90'
-              : 'bg-orange-600 text-white hover:bg-orange-700'
-          }`}
+          className="flex-1 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-primary-accent text-primary-accent-foreground hover:bg-primary-accent/90"
         >
-          {!isOnline && <FiWifiOff className="w-4 h-4" />}
           {isSubmitting
             ? 'Saving...'
-            : !isOnline
-            ? `Save ${initialData ? 'Changes' : 'Transaction'} Offline`
             : initialData
             ? 'Update Transaction'
             : 'Add Transaction'}
