@@ -39,11 +39,7 @@ export async function POST(request: NextRequest) {
         fullName: user.fullName,
         email: user.email,
         username: user.username || '',
-        phone: user.phone || '',
         dateOfBirth: user.dateOfBirth || '',
-        address: user.address || '',
-        city: user.city || '',
-        country: user.country || '',
       },
     });
   } catch (error) {

@@ -14,7 +14,7 @@ import { cn } from '../../lib/utils';
 interface DropdownContextType {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  triggerRef: React.RefObject<HTMLButtonElement | null>;
+  triggerRef: React.RefObject<HTMLElement | null>;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -54,43 +54,69 @@ interface DropdownItemProps
 const Dropdown = ({ children, className }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
       if (
+        target &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
+        !triggerRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
+      // Handle both mouse and touch events for better mobile support
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        setIsOpen(false);
+        // Return focus to trigger after closing
+        if (triggerRef.current) {
+          triggerRef.current.focus();
+        }
+      }
+    };
+
+    const handleFocusOut = (event: FocusEvent) => {
+      // Close dropdown when focus moves completely outside the dropdown area
+      const relatedTarget = event.relatedTarget as Node;
+      if (
+        relatedTarget &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(relatedTarget) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(relatedTarget)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('focusout', handleFocusOut);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('focusout', handleFocusOut);
     };
   }, [isOpen]);
 
@@ -133,7 +159,22 @@ const DropdownTrigger = ({
 
   if (asChild) {
     return (
-      <div onClick={() => setIsOpen(!isOpen)} className={className}>
+      <div
+        ref={triggerRef as React.RefObject<HTMLDivElement>}
+        onClick={() => setIsOpen(!isOpen)}
+        className={className}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-label={ariaLabel}
+      >
         {children}
       </div>
     );
@@ -141,7 +182,7 @@ const DropdownTrigger = ({
 
   return (
     <button
-      ref={triggerRef}
+      ref={triggerRef as React.RefObject<HTMLButtonElement>}
       onClick={() => setIsOpen(!isOpen)}
       className={cn(
         'inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors',
@@ -209,8 +250,12 @@ const DropdownContent = ({
   return (
     <div
       className={cn(
-        'absolute z-50 min-w-[8rem] overflow-y-auto rounded-lg border border-primary-border bg-primary-card shadow-lg',
+        'absolute z-50 min-w-[8rem] rounded-lg border border-primary-border bg-primary-card shadow-lg',
         'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+        // Responsive width: full width on small screens, fixed width on larger screens
+        'w-full sm:min-w-[20rem] sm:max-w-[28rem]',
+        // Better positioning for mobile with proper overflow handling
+        'max-h-[60vh] sm:max-h-[24rem] flex flex-col',
         sideClasses[side],
         alignmentClasses[align],
         className
@@ -219,7 +264,7 @@ const DropdownContent = ({
       aria-orientation="vertical"
     >
       {searchable && (
-        <div className="sticky top-0 z-10 bg-primary-background p-2 border-b border-primary-border">
+        <div className="flex-shrink-0 bg-primary-background p-2 border-b border-primary-border">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary-muted-foreground" />
             <input
@@ -233,7 +278,9 @@ const DropdownContent = ({
           </div>
         </div>
       )}
-      <div className="p-1">{children}</div>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-1 min-h-0 scrollbar-thin scrollbar-thumb-primary-border scrollbar-track-transparent hover:scrollbar-thumb-primary-muted-foreground">
+        {children}
+      </div>
     </div>
   );
 };

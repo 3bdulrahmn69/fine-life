@@ -9,20 +9,21 @@ import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
 export class AutomaticTransactionService {
   /**
-   * Normalize a date to midnight (00:00:00) in local timezone
-   * This ensures all automatic transactions execute at midnight
+   * Normalize a date to midnight UTC
+   * This ensures all automatic transactions execute at midnight UTC (when Vercel cron runs)
+   * and aligns with the database storage format
    */
   static normalizeDateToMidnight(date: Date): Date {
     const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
+    normalized.setUTCHours(0, 0, 0, 0);
     return normalized;
   }
 
   /**
-   * Create a date from date string and normalize to midnight
+   * Create a date from date string and normalize to midnight UTC
    */
   static createMidnightDate(dateString: string): Date {
-    const date = new Date(dateString + 'T00:00:00');
+    const date = new Date(dateString + 'T00:00:00Z'); // Force UTC interpretation
     return this.normalizeDateToMidnight(date);
   }
   /**
@@ -78,10 +79,10 @@ export class AutomaticTransactionService {
             `[CRON] Created transaction: ${newTransaction._id} for amount: ${autoTransaction.amount}`
           );
 
-          // Calculate next execution date (always normalized to midnight)
+          // Calculate next execution date from current execution time (always normalized to midnight)
           const nextExecutionDate = this.normalizeDateToMidnight(
             this.calculateNextExecutionDate(
-              autoTransaction.nextExecutionDate,
+              new Date(), // Use current execution time as base
               autoTransaction.recurrenceType,
               autoTransaction.recurrenceInterval || 1,
               autoTransaction.dayOfMonth,

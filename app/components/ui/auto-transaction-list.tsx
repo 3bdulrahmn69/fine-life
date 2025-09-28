@@ -20,7 +20,9 @@ import {
   RecurrenceType,
 } from '../../types/automatic-transaction';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
+import { useUserPreferences } from '../../hooks/useUserPreferences';
 import ConfirmModal from './confirm-modal';
+import { DateTime } from './time-variants';
 
 interface AutoTransactionListProps {
   onCreateNew: () => void;
@@ -35,6 +37,7 @@ export default function AutoTransactionList({
   refreshTrigger,
   currency = 'USD',
 }: AutoTransactionListProps) {
+  const { preferences } = useUserPreferences();
   const [transactions, setTransactions] = useState<AutomaticTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -334,12 +337,10 @@ export default function AutoTransactionList({
                         <p className="text-xs text-primary-muted-foreground font-medium">
                           Next Run
                         </p>
-                        <span className="text-primary-foreground">
-                          {format(
-                            new Date(transaction.nextExecutionDate),
-                            'MMM d, yyyy'
-                          )}
-                        </span>
+                        <DateTime
+                          date={transaction.nextExecutionDate}
+                          className="text-primary-foreground"
+                        />
                       </div>
                     </div>
                   </div>

@@ -4,17 +4,8 @@ import User from '../../../models/User';
 
 export async function POST(request: NextRequest) {
   try {
-    const {
-      fullName,
-      email,
-      username,
-      phone,
-      dateOfBirth,
-      address,
-      city,
-      country,
-      userId,
-    } = await request.json();
+    const { fullName, email, username, dateOfBirth, userId } =
+      await request.json();
 
     // Basic validation
     if (!fullName || !fullName.trim()) {
@@ -96,11 +87,7 @@ export async function POST(request: NextRequest) {
     const updateData: Partial<typeof User.prototype> = {
       fullName: fullName.trim(),
       email: email.trim(),
-      phone: phone?.trim() || '',
       dateOfBirth: dateOfBirth || null,
-      address: address?.trim() || '',
-      city: city?.trim() || '',
-      country: country?.trim() || '',
       updatedAt: new Date(),
     };
 
@@ -125,11 +112,7 @@ export async function POST(request: NextRequest) {
         fullName: updatedUser.fullName,
         email: updatedUser.email,
         username: updatedUser.username,
-        phone: updatedUser.phone,
         dateOfBirth: updatedUser.dateOfBirth,
-        address: updatedUser.address,
-        city: updatedUser.city,
-        country: updatedUser.country,
       },
     });
   } catch (error) {

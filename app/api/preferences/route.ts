@@ -24,12 +24,14 @@ export async function GET() {
       preferences = new UserPreferences({
         userId: session.user.id,
         currency: 'USD',
+        timezone: 'UTC',
       });
       await preferences.save();
     }
 
     return NextResponse.json({
       currency: preferences.currency,
+      timezone: preferences.timezone || 'UTC',
     });
   } catch (error) {
     console.error('Error fetching user preferences:', error);
@@ -51,29 +53,46 @@ export async function PUT(request: NextRequest) {
     const data = await request.json();
     await connectDB();
 
-    // Only allow updating currency field
-    if (!data.currency) {
+    // Prepare update object
+    const updateData: any = { userId: session.user.id };
+
+    // Validate and add currency if provided
+    if (data.currency) {
+      if (!CURRENCIES[data.currency as keyof typeof CURRENCIES]) {
+        return NextResponse.json(
+          { error: 'Invalid currency code' },
+          { status: 400 }
+        );
+      }
+      updateData.currency = data.currency;
+    }
+
+    // Validate and add timezone if provided
+    if (data.timezone) {
+      // Basic timezone validation (you can expand this)
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: data.timezone });
+        updateData.timezone = data.timezone;
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Invalid timezone' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Ensure at least one field is being updated
+    if (!data.currency && !data.timezone) {
       return NextResponse.json(
-        { error: 'Only currency updates are allowed' },
+        { error: 'No valid fields to update' },
         { status: 400 }
       );
     }
 
-    // Validate currency
-    if (!CURRENCIES[data.currency as keyof typeof CURRENCIES]) {
-      return NextResponse.json(
-        { error: 'Invalid currency code' },
-        { status: 400 }
-      );
-    }
-
-    // Update only the currency field
+    // Update preferences
     const preferences = await UserPreferences.findOneAndUpdate(
       { userId: session.user.id },
-      {
-        currency: data.currency,
-        userId: session.user.id,
-      },
+      updateData,
       {
         new: true,
         upsert: true,
@@ -82,8 +101,9 @@ export async function PUT(request: NextRequest) {
     );
 
     return NextResponse.json({
-      message: 'Currency updated successfully',
+      message: 'Preferences updated successfully',
       currency: preferences.currency,
+      timezone: preferences.timezone,
     });
   } catch (error) {
     console.error('Error updating user currency:', error);

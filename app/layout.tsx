@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { ToastContainer } from 'react-toastify';
 import AuthProvider from './providers/auth-provider';
+import { PreferencesProvider } from './providers/preferences-provider';
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 
@@ -159,6 +160,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         {/* Skip Links for Accessibility */}
         <a
@@ -174,28 +176,30 @@ export default function RootLayout({
           Skip to navigation
         </a>
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            themes={['light', 'dark', 'life', 'system']}
-            enableSystem={true}
-            storageKey="fine-life-theme"
-          >
-            <ToastContainer
-              position="bottom-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="colored"
-              className="toast-container"
-            />
-            {children}
-          </ThemeProvider>
+          <PreferencesProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              themes={['light', 'dark', 'life', 'system']}
+              enableSystem={true}
+              storageKey="fine-life-theme"
+            >
+              <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                className="toast-container"
+              />
+              {children}
+            </ThemeProvider>
+          </PreferencesProvider>
         </AuthProvider>
       </body>
     </html>

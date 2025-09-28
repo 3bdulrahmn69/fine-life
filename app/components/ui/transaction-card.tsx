@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Transaction, TransactionType } from '../../types/transaction';
 import { getCategoryById, getSubcategoryById } from '../../data/categories';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
-import { format } from 'date-fns';
 import { CategoryIcon } from '../../lib/icons';
+import { TimeDate, TimeOnly } from './time-variants';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -80,9 +80,9 @@ export default function TransactionCard({
                 </>
               )}
               <span>•</span>
-              <span>{format(new Date(transaction.date), 'MMM dd, yyyy')}</span>
+              <TimeDate date={transaction.date} />
               <span>•</span>
-              <span>{format(new Date(transaction.date), 'h:mm a')}</span>
+              <TimeOnly date={transaction.date} />
             </div>
 
             {/* Transaction Tags */}

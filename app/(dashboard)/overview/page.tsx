@@ -140,7 +140,7 @@ export default function OverviewPage() {
       title: 'Monthly Balance',
       value: monthlyStats
         ? formatCurrency(monthlyStats.balance, preferences.currency)
-        : '$0.00',
+        : formatCurrency(0, preferences.currency),
       change: monthlyStats && monthlyStats.balance >= 0 ? '+100%' : '0%',
       trend: monthlyStats && monthlyStats.balance >= 0 ? 'up' : 'down',
       icon: BiWallet,
@@ -153,7 +153,7 @@ export default function OverviewPage() {
       title: 'Monthly Income',
       value: monthlyStats
         ? formatCurrency(monthlyStats.totalIncome, preferences.currency)
-        : '$0.00',
+        : formatCurrency(0, preferences.currency),
       change: '+0%', // TODO: Calculate change from previous month
       trend: 'up',
       icon: FiTrendingUp,
@@ -163,7 +163,7 @@ export default function OverviewPage() {
       title: 'Monthly Expenses',
       value: monthlyStats
         ? formatCurrency(monthlyStats.totalExpenses, preferences.currency)
-        : '$0.00',
+        : formatCurrency(0, preferences.currency),
       change: '0%', // TODO: Calculate change from previous month
       trend: 'down',
       icon: FiTrendingDown,

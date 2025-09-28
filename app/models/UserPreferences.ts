@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IUserPreferences extends Document {
   userId: string;
   currency: string;
+  timezone: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +19,11 @@ const UserPreferencesSchema = new Schema<IUserPreferences>(
       type: String,
       required: true,
       default: 'USD',
+    },
+    timezone: {
+      type: String,
+      required: true,
+      default: 'UTC',
     },
   },
   {

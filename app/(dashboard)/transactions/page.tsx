@@ -19,6 +19,7 @@ import Modal from '../../components/ui/modal';
 import ConfirmModal from '../../components/ui/confirm-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { useTransactionCache, useCacheUtils } from '../../hooks/useDataCache';
+import { formatCurrency } from '../../lib/currency';
 
 interface MonthlyGroup {
   month: string;
@@ -445,7 +446,10 @@ export default function TransactionsPage() {
                           : 'text-red-500'
                       }`}
                     >
-                      ${Math.abs(currentMonthData.balance).toFixed(2)}
+                      {formatCurrency(
+                        Math.abs(currentMonthData.balance),
+                        preferences.currency
+                      )}
                       {currentMonthData.balance < 0 && (
                         <span className="text-sm ml-1">deficit</span>
                       )}
@@ -459,7 +463,11 @@ export default function TransactionsPage() {
                       Income
                     </div>
                     <div className="text-lg sm:text-xl font-bold text-green-600">
-                      +${currentMonthData.totalIncome.toFixed(2)}
+                      +
+                      {formatCurrency(
+                        currentMonthData.totalIncome,
+                        preferences.currency
+                      )}
                     </div>
                   </div>
                   <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
@@ -467,7 +475,11 @@ export default function TransactionsPage() {
                       Expenses
                     </div>
                     <div className="text-lg sm:text-xl font-bold text-red-600">
-                      -${currentMonthData.totalExpenses.toFixed(2)}
+                      -
+                      {formatCurrency(
+                        currentMonthData.totalExpenses,
+                        preferences.currency
+                      )}
                     </div>
                   </div>
                 </div>
@@ -497,7 +509,11 @@ export default function TransactionsPage() {
                             day.balance >= 0 ? 'text-green-500' : 'text-red-500'
                           }`}
                         >
-                          {day.balance >= 0 ? '+' : ''}${day.balance.toFixed(2)}
+                          {day.balance >= 0 ? '+' : ''}
+                          {formatCurrency(
+                            Math.abs(day.balance),
+                            preferences.currency
+                          )}
                         </div>
                       </div>
                     </div>
