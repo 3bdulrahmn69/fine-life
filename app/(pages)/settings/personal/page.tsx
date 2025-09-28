@@ -67,15 +67,11 @@ export default function PersonalInfoPage() {
   // Load cached data from localStorage
   useEffect(() => {
     if (cacheKey && !initialDataLoaded && session?.user) {
-      console.log('🔍 Checking cache for key:', cacheKey);
       try {
         const cachedData = localStorage.getItem(cacheKey);
         if (cachedData) {
-          console.log('📦 Found cached data');
           const parsedData = JSON.parse(cachedData);
           const cacheAge = Date.now() - (parsedData.timestamp || 0);
-
-          console.log('⏰ Cache age:', Math.round(cacheAge / 1000), 'seconds');
 
           // Use cache if it's less than 5 minutes old
           if (cacheAge < 5 * 60 * 1000) {

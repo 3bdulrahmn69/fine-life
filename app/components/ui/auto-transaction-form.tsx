@@ -9,6 +9,7 @@ import { TransactionType } from '../../types/transaction';
 import { CurrencyCode } from '../../lib/currency';
 import AmountInput from './amount-input';
 import CategorySelector from './category-selector';
+import CurrencySelector from './currency-selector';
 
 interface AutoTransactionFormProps {
   initialData?: AutomaticTransaction;
@@ -27,6 +28,7 @@ export default function AutoTransactionForm({
 }: AutoTransactionFormProps) {
   const [formData, setFormData] = useState<AutomaticTransactionFormData>({
     amount: initialData?.amount.toString() || '',
+    currency: initialData?.currency || currency,
     description: initialData?.description || '',
     category: initialData?.category || '',
     subcategory: initialData?.subcategory || '',
@@ -176,10 +178,21 @@ export default function AutoTransactionForm({
         <AmountInput
           value={formData.amount}
           onChange={(value) => updateFormData('amount', value)}
-          currency={currency}
+          currency={formData.currency as CurrencyCode}
           error={errors.amount}
           required
           disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Currency */}
+      <div>
+        <CurrencySelector
+          value={formData.currency as CurrencyCode}
+          onChange={(currency) => updateFormData('currency', currency)}
+          disabled={isSubmitting}
+          label="Currency"
+          required
         />
       </div>
 

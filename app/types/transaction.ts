@@ -22,6 +22,7 @@ export interface Transaction {
   _id?: string;
   userId: string;
   amount: number;
+  currency: string;
   description: string;
   category: string;
   subcategory?: string;
@@ -36,6 +37,7 @@ export interface Transaction {
 
 export interface TransactionFormData {
   amount: string;
+  currency: string;
   description: string;
   category: string;
   subcategory?: string;

@@ -12,6 +12,15 @@ const transactionSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    currency: {
+      type: String,
+      required: [true, 'Currency is required'],
+      default: 'USD',
+      trim: true,
+      uppercase: true,
+      minlength: [3, 'Currency code must be 3 characters'],
+      maxlength: [3, 'Currency code must be 3 characters'],
+    },
     description: {
       type: String,
       required: true,
@@ -56,6 +65,8 @@ const transactionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 

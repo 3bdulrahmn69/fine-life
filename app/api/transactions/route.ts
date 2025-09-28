@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       amount,
+      currency,
       description,
       category,
       subcategory,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation
-    if (!amount || !description || !category || !type || !date) {
+    if (!amount || !currency || !description || !category || !type || !date) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -112,9 +113,10 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const transaction = new Transaction({
+    const transactionData = {
       userId: session.user.id,
       amount: Math.abs(amount), // Store as positive, type determines income/expense
+      currency: currency || 'USD',
       description: description.trim(),
       category,
       subcategory: subcategory || undefined,
@@ -123,8 +125,9 @@ export async function POST(request: NextRequest) {
       isAutomatic: Boolean(isAutomatic),
       type,
       date: new Date(date),
-    });
+    };
 
+    const transaction = new Transaction(transactionData);
     await transaction.save();
 
     return NextResponse.json(transaction, { status: 201 });

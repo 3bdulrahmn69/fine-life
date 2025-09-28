@@ -15,6 +15,7 @@ export interface AutomaticTransaction {
   _id?: string;
   userId: string;
   amount: number;
+  currency: string;
   description: string;
   category: string;
   subcategory?: string;
@@ -44,6 +45,7 @@ export interface AutomaticTransaction {
 
 export interface AutomaticTransactionFormData {
   amount: string;
+  currency: string;
   description: string;
   category: string;
   subcategory?: string;

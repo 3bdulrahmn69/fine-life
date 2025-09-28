@@ -21,6 +21,7 @@ import {
 } from '../../types/automatic-transaction';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
+import ConvertedAmount from './converted-amount';
 import ConfirmModal from './confirm-modal';
 import { DateTime } from './time-variants';
 
@@ -314,7 +315,14 @@ export default function AutoTransactionList({
                           }
                         >
                           {transaction.type === 'expense' ? '-' : '+'}
-                          {formatCurrency(transaction.amount, currency)}
+                          <ConvertedAmount
+                            amount={transaction.amount}
+                            originalCurrency={
+                              (transaction.currency || currency) as CurrencyCode
+                            }
+                            displayCurrency={currency}
+                            showOriginal={transaction.currency !== currency}
+                          />
                         </span>
                       </div>
                     </div>

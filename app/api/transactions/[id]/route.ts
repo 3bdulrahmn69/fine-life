@@ -56,6 +56,7 @@ export async function PUT(
     const body = await request.json();
     const {
       amount,
+      currency,
       description,
       category,
       subcategory,
@@ -67,7 +68,7 @@ export async function PUT(
     } = body;
 
     // Validation
-    if (!amount || !description || !category || !type || !date) {
+    if (!amount || !currency || !description || !category || !type || !date) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -90,20 +91,23 @@ export async function PUT(
 
     await connectDB();
 
+    const updateData = {
+      amount: Math.abs(amount),
+      currency: currency || 'USD',
+      description: description.trim(),
+      category,
+      subcategory: subcategory || undefined,
+      notes: notes?.trim() || undefined,
+      isMandatory: Boolean(isMandatory),
+      isAutomatic: Boolean(isAutomatic),
+      type,
+      date: new Date(date),
+    };
+
     const transaction = await Transaction.findOneAndUpdate(
       { _id: id, userId: session.user.id },
-      {
-        amount: Math.abs(amount),
-        description: description.trim(),
-        category,
-        subcategory: subcategory || undefined,
-        notes: notes?.trim() || undefined,
-        isMandatory: Boolean(isMandatory),
-        isAutomatic: Boolean(isAutomatic),
-        type,
-        date: new Date(date),
-      },
-      { new: true }
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
 
     if (!transaction) {

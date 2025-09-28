@@ -15,6 +15,11 @@ const automaticTransactionSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    currency: {
+      type: String,
+      required: true,
+      default: 'USD',
+    },
     description: {
       type: String,
       required: true,

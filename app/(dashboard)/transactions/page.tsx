@@ -20,6 +20,10 @@ import ConfirmModal from '../../components/ui/confirm-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { useTransactionCache, useCacheUtils } from '../../hooks/useDataCache';
 import { formatCurrency } from '../../lib/currency';
+import {
+  convertTransactionsToUserCurrency,
+  calculateMonthlyTotals,
+} from '../../lib/transaction-converter';
 
 interface MonthlyGroup {
   month: string;
@@ -125,76 +129,107 @@ export default function TransactionsPage() {
     }
   };
 
-  // Group transactions by month and day
+  // Group transactions by month and day with currency conversion
   useEffect(() => {
-    const grouped = transactions.reduce(
-      (acc: Record<string, MonthlyGroup>, transaction) => {
-        const date = new Date(transaction.date);
-        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+    const processTransactionsWithCurrency = async () => {
+      if (!preferences.currency || transactions.length === 0) {
+        setGroupedTransactions([]);
+        return;
+      }
 
-        if (!acc[monthKey]) {
-          acc[monthKey] = {
-            month: format(date, 'MMMM'),
-            year: date.getFullYear(),
-            days: [],
-            totalIncome: 0,
-            totalExpenses: 0,
-            balance: 0,
-          };
-        }
+      try {
+        // Convert all transactions to user's preferred currency
+        const convertedTransactions = await convertTransactionsToUserCurrency(
+          transactions,
+          preferences.currency
+        );
 
-        // Find or create day group
-        const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        let dayGroup = acc[monthKey].days.find((d) => d.dateString === dayKey);
+        const grouped = convertedTransactions.reduce(
+          (acc: Record<string, MonthlyGroup>, transaction) => {
+            const date = new Date(transaction.date);
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
 
-        if (!dayGroup) {
-          dayGroup = {
-            date: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
-            dateString: dayKey,
-            transactions: [],
-            totalIncome: 0,
-            totalExpenses: 0,
-            balance: 0,
-          };
-          acc[monthKey].days.push(dayGroup);
-        }
+            if (!acc[monthKey]) {
+              acc[monthKey] = {
+                month: format(date, 'MMMM'),
+                year: date.getFullYear(),
+                days: [],
+                totalIncome: 0,
+                totalExpenses: 0,
+                balance: 0,
+              };
+            }
 
-        dayGroup.transactions.push(transaction);
+            // Find or create day group
+            const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+            let dayGroup = acc[monthKey].days.find(
+              (d) => d.dateString === dayKey
+            );
 
-        if (transaction.type === TransactionType.INCOME) {
-          dayGroup.totalIncome += transaction.amount;
-          acc[monthKey].totalIncome += transaction.amount;
-        } else {
-          dayGroup.totalExpenses += transaction.amount;
-          acc[monthKey].totalExpenses += transaction.amount;
-        }
+            if (!dayGroup) {
+              dayGroup = {
+                date: new Date(
+                  date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate()
+                ),
+                dateString: dayKey,
+                transactions: [],
+                totalIncome: 0,
+                totalExpenses: 0,
+                balance: 0,
+              };
+              acc[monthKey].days.push(dayGroup);
+            }
 
-        dayGroup.balance = dayGroup.totalIncome - dayGroup.totalExpenses;
-        acc[monthKey].balance =
-          acc[monthKey].totalIncome - acc[monthKey].totalExpenses;
+            // Use original transaction for display but converted amount for calculations
+            dayGroup.transactions.push(transaction);
 
-        return acc;
-      },
-      {}
-    );
+            // Use converted amount for calculations
+            const convertedAmount = transaction.convertedAmount;
 
-    // Sort by date (newest first) and sort days and transactions within each month
-    const sortedGroups = Object.values(grouped)
-      .sort((a, b) => b.year - a.year || b.month.localeCompare(a.month))
-      .map((group) => ({
-        ...group,
-        days: group.days
-          .sort((a, b) => b.date.getTime() - a.date.getTime())
-          .map((day) => ({
-            ...day,
-            transactions: day.transactions.sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            ),
-          })),
-      }));
+            if (transaction.type === TransactionType.INCOME) {
+              dayGroup.totalIncome += convertedAmount;
+              acc[monthKey].totalIncome += convertedAmount;
+            } else {
+              dayGroup.totalExpenses += convertedAmount;
+              acc[monthKey].totalExpenses += convertedAmount;
+            }
 
-    setGroupedTransactions(sortedGroups);
-  }, [transactions]);
+            dayGroup.balance = dayGroup.totalIncome - dayGroup.totalExpenses;
+            acc[monthKey].balance =
+              acc[monthKey].totalIncome - acc[monthKey].totalExpenses;
+
+            return acc;
+          },
+          {}
+        );
+
+        // Sort by date (newest first) and sort days and transactions within each month
+        const sortedGroups = Object.values(grouped)
+          .sort((a, b) => b.year - a.year || b.month.localeCompare(a.month))
+          .map((group) => ({
+            ...group,
+            days: group.days
+              .sort((a, b) => b.date.getTime() - a.date.getTime())
+              .map((day) => ({
+                ...day,
+                transactions: day.transactions.sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                ),
+              })),
+          }));
+
+        setGroupedTransactions(sortedGroups);
+      } catch (error) {
+        console.error('Error processing transactions with currency:', error);
+        setGroupedTransactions([]);
+      }
+    };
+
+    processTransactionsWithCurrency();
+  }, [transactions, preferences.currency]);
 
   // Load transactions on mount only
   useEffect(() => {

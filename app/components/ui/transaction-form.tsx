@@ -10,6 +10,7 @@ import {
 import { CurrencyCode } from '../../lib/currency';
 import AmountInput from './amount-input';
 import CategorySelector from './category-selector';
+import CurrencySelector from './currency-selector';
 
 interface TransactionFormProps {
   initialData?: Transaction;
@@ -28,6 +29,7 @@ export default function TransactionForm({
 }: TransactionFormProps) {
   const [formData, setFormData] = useState<TransactionFormData>({
     amount: initialData?.amount.toString() || '',
+    currency: initialData?.currency || currency,
     description: initialData?.description || '',
     category: initialData?.category || '',
     subcategory: initialData?.subcategory || '',
@@ -145,10 +147,21 @@ export default function TransactionForm({
         <AmountInput
           value={formData.amount}
           onChange={(value) => updateFormData('amount', value)}
-          currency={currency}
+          currency={formData.currency as CurrencyCode}
           error={errors.amount}
           required
           disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Currency */}
+      <div>
+        <CurrencySelector
+          value={formData.currency as CurrencyCode}
+          onChange={(currency) => updateFormData('currency', currency)}
+          disabled={isSubmitting}
+          label="Currency"
+          required
         />
       </div>
 

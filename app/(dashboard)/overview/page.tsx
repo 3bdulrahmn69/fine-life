@@ -22,13 +22,18 @@ import {
 } from 'react-icons/fi';
 import { BiWallet } from 'react-icons/bi';
 import { useTransactionData } from '../../hooks/useTransactionData';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import { format } from 'date-fns';
 import SpendingCategories from '../../components/ui/spending-categories';
 import TransactionModal from '../../components/ui/transaction-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import Container from '../../components/ui/container';
+import ConvertedAmount from '../../components/ui/converted-amount';
 import MonthYearNavigator from '../../components/ui/month-year-navigator';
+import {
+  calculateMonthlyTotals,
+  convertTransactionsToUserCurrency,
+} from '../../lib/transaction-converter';
 import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
 import { useMonthlyDataCache } from '../../hooks/useDataCache';
 
@@ -66,44 +71,12 @@ export default function OverviewPage() {
     hasCachedMonthlyData,
   } = useMonthlyDataCache();
 
-  // Fetch monthly data function with caching
+  // Fetch monthly data function with caching and currency conversion
   const loadMonthlyData = async (forceRefresh = false) => {
-    if (!session) return;
+    if (!session || !preferences.currency) return;
 
     try {
       setIsLoadingMonthly(true);
-
-      // Check cache first for instant display
-      if (!forceRefresh) {
-        const cachedStats = getCachedMonthlyData(
-          selectedYear,
-          selectedMonth,
-          'stats'
-        );
-        const cachedTransactions = getCachedMonthlyData(
-          selectedYear,
-          selectedMonth,
-          'transactions'
-        );
-        const cachedRecent = getCachedMonthlyData(
-          selectedYear,
-          selectedMonth,
-          'recent'
-        );
-
-        // Set cached data immediately for instant display
-        if (cachedStats) setMonthlyStats(cachedStats);
-        if (cachedTransactions && Array.isArray(cachedTransactions))
-          setMonthlyTransactions(cachedTransactions);
-        if (cachedRecent && Array.isArray(cachedRecent))
-          setMonthlyRecentTransactions(cachedRecent);
-
-        // If we have all cached data, return early
-        if (cachedStats && cachedTransactions && cachedRecent) {
-          setIsLoadingMonthly(false);
-          return;
-        }
-      }
 
       // Fetch fresh data (with cache)
       const [statsData, transactionsData, recentData] = await Promise.all([
@@ -117,11 +90,39 @@ export default function OverviewPage() {
         fetchMonthlyData(selectedYear, selectedMonth, 'recent', forceRefresh),
       ]);
 
-      if (statsData) setMonthlyStats(statsData);
-      if (transactionsData && Array.isArray(transactionsData))
-        setMonthlyTransactions(transactionsData);
-      if (recentData && Array.isArray(recentData))
-        setMonthlyRecentTransactions(recentData);
+      // Process transactions with currency conversion
+      if (transactionsData && Array.isArray(transactionsData)) {
+        // Convert transactions to user currency and calculate totals
+        const convertedStats = await calculateMonthlyTotals(
+          transactionsData,
+          preferences.currency
+        );
+
+        // Update stats with converted amounts
+        setMonthlyStats({
+          totalIncome: convertedStats.totalIncome,
+          totalExpenses: convertedStats.totalExpenses,
+          balance: convertedStats.netAmount,
+          transactionCount: convertedStats.transactionCount,
+        });
+
+        // Convert transactions for display
+        const convertedTransactions = await convertTransactionsToUserCurrency(
+          transactionsData,
+          preferences.currency
+        );
+
+        setMonthlyTransactions(convertedTransactions);
+      }
+
+      // Process recent transactions with currency conversion
+      if (recentData && Array.isArray(recentData)) {
+        const convertedRecent = await convertTransactionsToUserCurrency(
+          recentData,
+          preferences.currency
+        );
+        setMonthlyRecentTransactions(convertedRecent);
+      }
     } catch (error) {
       console.error('Error loading monthly data:', error);
     } finally {
@@ -362,10 +363,19 @@ export default function OverviewPage() {
                           }`}
                         >
                           {transaction.type === 'income' ? '+' : '-'}
-                          {formatCurrency(
-                            transaction.amount,
-                            preferences.currency
-                          )}
+                          <ConvertedAmount
+                            amount={transaction.amount}
+                            originalCurrency={
+                              (transaction.currency ||
+                                preferences.currency) as CurrencyCode
+                            }
+                            displayCurrency={
+                              preferences.currency as CurrencyCode
+                            }
+                            showOriginal={
+                              transaction.currency !== preferences.currency
+                            }
+                          />
                         </p>
                       </div>
                     ))

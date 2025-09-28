@@ -6,6 +6,7 @@ import { getCategoryById, getSubcategoryById } from '../../data/categories';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import { CategoryIcon } from '../../lib/icons';
 import { TimeDate, TimeOnly } from './time-variants';
+import ConvertedAmount from './converted-amount';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -67,7 +68,14 @@ export default function TransactionCard({
                 }`}
               >
                 {isIncome ? '+' : ''}
-                {formatCurrency(amountDisplay, currency)}
+                <ConvertedAmount
+                  amount={transaction.amount}
+                  originalCurrency={
+                    (transaction.currency || currency) as CurrencyCode
+                  }
+                  displayCurrency={currency}
+                  showOriginal={transaction.currency !== currency}
+                />
               </span>
             </div>
 

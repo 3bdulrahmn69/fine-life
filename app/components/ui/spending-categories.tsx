@@ -7,6 +7,10 @@ import { TRANSACTION_CATEGORIES } from '../../data/categories';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import { CardContent } from './card';
 import { FiBarChart } from 'react-icons/fi';
+import {
+  convertTransactionsToUserCurrency,
+  calculateCategoryTotals,
+} from '../../lib/transaction-converter';
 
 interface CategorySpending {
   id: string;
@@ -42,73 +46,98 @@ export default function SpendingCategories({
   const [totalExpenses, setTotalExpenses] = useState(0);
 
   useEffect(() => {
-    // Filter transactions based on period and type
-    const now = new Date();
-    const periodStart = new Date();
-
-    switch (period) {
-      case 'week':
-        periodStart.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        periodStart.setMonth(now.getMonth() - 1);
-        break;
-      case 'year':
-        periodStart.setFullYear(now.getFullYear() - 1);
-        break;
-    }
-
-    const periodTransactions = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      return (
-        transactionDate >= periodStart &&
-        transactionDate <= now &&
-        transaction.type === TransactionType.EXPENSE
-      );
-    });
-
-    // Calculate total expenses
-    const total = periodTransactions.reduce(
-      (sum, transaction) => sum + transaction.amount,
-      0
-    );
-    setTotalExpenses(total);
-
-    // Group by category and calculate spending
-    const categoryMap = new Map<string, CategorySpending>();
-
-    periodTransactions.forEach((transaction) => {
-      const category = TRANSACTION_CATEGORIES.find(
-        (cat) => cat.id === transaction.category
-      );
-      if (!category) return;
-
-      const existing = categoryMap.get(category.id);
-      if (existing) {
-        existing.amount += transaction.amount;
-        existing.transactionCount += 1;
-      } else {
-        categoryMap.set(category.id, {
-          id: category.id,
-          name: category.name,
-          amount: transaction.amount,
-          percentage: 0, // Will calculate after
-          color: category.color,
-          icon: category.icon,
-          transactionCount: 1,
-        });
+    const processTransactionsWithCurrency = async () => {
+      if (!currency || transactions.length === 0) {
+        setCategoryData([]);
+        setTotalExpenses(0);
+        return;
       }
-    });
 
-    // Calculate percentages and sort by amount
-    const categories = Array.from(categoryMap.values()).map((cat) => ({
-      ...cat,
-      percentage: total > 0 ? (cat.amount / total) * 100 : 0,
-    }));
+      try {
+        // Filter transactions based on period and type
+        const now = new Date();
+        const periodStart = new Date();
 
-    categories.sort((a, b) => b.amount - a.amount);
-    setCategoryData(categories); // Show all categories
-  }, [transactions, period]);
+        switch (period) {
+          case 'week':
+            periodStart.setDate(now.getDate() - 7);
+            break;
+          case 'month':
+            periodStart.setMonth(now.getMonth() - 1);
+            break;
+          case 'year':
+            periodStart.setFullYear(now.getFullYear() - 1);
+            break;
+        }
+
+        const periodTransactions = transactions.filter((transaction) => {
+          const transactionDate = new Date(transaction.date);
+          return (
+            transactionDate >= periodStart &&
+            transactionDate <= now &&
+            transaction.type === TransactionType.EXPENSE
+          );
+        });
+
+        // Convert transactions to user currency
+        const convertedTransactions = await convertTransactionsToUserCurrency(
+          periodTransactions,
+          currency
+        );
+
+        // Calculate total expenses with converted amounts
+        const total = convertedTransactions.reduce(
+          (sum, transaction) => sum + transaction.convertedAmount,
+          0
+        );
+        setTotalExpenses(total);
+
+        // Group by category and calculate spending with converted amounts
+        const categoryMap = new Map<string, CategorySpending>();
+
+        convertedTransactions.forEach((transaction) => {
+          const category = TRANSACTION_CATEGORIES.find(
+            (cat) => cat.id === transaction.category
+          );
+          if (!category) return;
+
+          const existing = categoryMap.get(category.id);
+          if (existing) {
+            existing.amount += transaction.convertedAmount;
+            existing.transactionCount += 1;
+          } else {
+            categoryMap.set(category.id, {
+              id: category.id,
+              name: category.name,
+              amount: transaction.convertedAmount,
+              percentage: 0, // Will calculate after
+              color: category.color,
+              icon: category.icon,
+              transactionCount: 1,
+            });
+          }
+        });
+
+        // Calculate percentages and sort by amount
+        const categories = Array.from(categoryMap.values()).map((cat) => ({
+          ...cat,
+          percentage: total > 0 ? (cat.amount / total) * 100 : 0,
+        }));
+
+        categories.sort((a, b) => b.amount - a.amount);
+        setCategoryData(categories); // Show all categories
+      } catch (error) {
+        console.error(
+          'Error processing spending categories with currency:',
+          error
+        );
+        setCategoryData([]);
+        setTotalExpenses(0);
+      }
+    };
+
+    processTransactionsWithCurrency();
+  }, [transactions, period, currency]);
 
   if (categoryData.length === 0) {
     return (

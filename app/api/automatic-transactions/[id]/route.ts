@@ -212,14 +212,10 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     const { id } = await params;
     await connectDB();
 
-    const autoTransaction = await AutomaticTransaction.findOneAndUpdate(
-      {
-        _id: id,
-        userId: session.user.id,
-      },
-      { status: AutoTransactionStatus.PAUSED },
-      { new: true }
-    );
+    const autoTransaction = await AutomaticTransaction.findOneAndDelete({
+      _id: id,
+      userId: session.user.id,
+    });
 
     if (!autoTransaction) {
       return NextResponse.json(
@@ -229,13 +225,13 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({
-      message: 'Automatic transaction paused successfully',
+      message: 'Automatic transaction deleted successfully',
       transaction: autoTransaction,
     });
   } catch (error) {
-    console.error('Error pausing automatic transaction:', error);
+    console.error('Error deleting automatic transaction:', error);
     return NextResponse.json(
-      { error: 'Failed to pause automatic transaction' },
+      { error: 'Failed to delete automatic transaction' },
       { status: 500 }
     );
   }
