@@ -23,7 +23,7 @@ import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import ConvertedAmount from './converted-amount';
 import ConfirmModal from './confirm-modal';
-import { DateTime } from './time-variants';
+import { TimeDate } from './time-variants';
 
 interface AutoTransactionListProps {
   onCreateNew: () => void;
@@ -345,7 +345,7 @@ export default function AutoTransactionList({
                         <p className="text-xs text-primary-muted-foreground font-medium">
                           Next Run
                         </p>
-                        <DateTime
+                        <TimeDate
                           date={transaction.nextExecutionDate}
                           className="text-primary-foreground"
                         />

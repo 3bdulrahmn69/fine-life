@@ -61,6 +61,7 @@ export class AutomaticTransactionService {
           const newTransaction = new Transaction({
             userId: autoTransaction.userId,
             amount: autoTransaction.amount,
+            currency: autoTransaction.currency, // Fix: Copy currency from automatic transaction
             description: autoTransaction.description,
             category: autoTransaction.category,
             subcategory: autoTransaction.subcategory,
@@ -76,7 +77,7 @@ export class AutomaticTransactionService {
 
           await newTransaction.save();
           console.log(
-            `[CRON] Created transaction: ${newTransaction._id} for amount: ${autoTransaction.amount}`
+            `[CRON] Created transaction: ${newTransaction._id} for amount: ${autoTransaction.amount} ${autoTransaction.currency}`
           );
 
           // Calculate next execution date from current execution time (always normalized to midnight)

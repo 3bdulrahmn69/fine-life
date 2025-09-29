@@ -7,9 +7,8 @@ import {
 } from '../../types/automatic-transaction';
 import { TransactionType } from '../../types/transaction';
 import { CurrencyCode } from '../../lib/currency';
-import AmountInput from './amount-input';
+import AmountCurrencyInput from './amount-currency-input';
 import CategorySelector from './category-selector';
-import CurrencySelector from './currency-selector';
 
 interface AutoTransactionFormProps {
   initialData?: AutomaticTransaction;
@@ -134,18 +133,18 @@ export default function AutoTransactionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {/* Transaction Type */}
       <div>
         <label className="block text-sm font-medium text-primary-foreground mb-2">
           Transaction Type
         </label>
-        <div className="flex space-x-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => updateFormData('type', 'expense')}
             disabled={isSubmitting}
-            className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 ${
+            className={`py-2 px-3 sm:px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 text-sm sm:text-base ${
               formData.type === 'expense'
                 ? 'border-destructive bg-destructive/10 text-destructive'
                 : 'border-primary-border text-primary-foreground hover:border-primary-accent'
@@ -158,7 +157,7 @@ export default function AutoTransactionForm({
             type="button"
             onClick={() => updateFormData('type', 'income')}
             disabled={isSubmitting}
-            className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 ${
+            className={`py-2 px-3 sm:px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 text-sm sm:text-base ${
               formData.type === 'income'
                 ? 'border-success bg-success/10 text-success'
                 : 'border-primary-border text-primary-foreground hover:border-primary-accent'
@@ -170,31 +169,20 @@ export default function AutoTransactionForm({
         </div>
       </div>
 
-      {/* Amount */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          Amount <span className="text-destructive">*</span>
-        </label>
-        <AmountInput
-          value={formData.amount}
-          onChange={(value) => updateFormData('amount', value)}
-          currency={formData.currency as CurrencyCode}
-          error={errors.amount}
-          required
-          disabled={isSubmitting}
-        />
-      </div>
-
-      {/* Currency */}
-      <div>
-        <CurrencySelector
-          value={formData.currency as CurrencyCode}
-          onChange={(currency) => updateFormData('currency', currency)}
-          disabled={isSubmitting}
-          label="Currency"
-          required
-        />
-      </div>
+      {/* Amount & Currency */}
+      <AmountCurrencyInput
+        value={formData.amount}
+        onChange={(value: string) => updateFormData('amount', value)}
+        currency={formData.currency as CurrencyCode}
+        onCurrencyChange={(currency: CurrencyCode) =>
+          updateFormData('currency', currency)
+        }
+        error={errors.amount}
+        required
+        disabled={isSubmitting}
+        label="Amount"
+        showCurrencyName={false}
+      />
 
       {/* Description */}
       <div>
@@ -234,64 +222,69 @@ export default function AutoTransactionForm({
       />
 
       {/* Recurrence Settings */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          Frequency <span className="text-destructive">*</span>
-        </label>
-        <select
-          value={formData.recurrenceType}
-          onChange={(e) =>
-            updateFormData('recurrenceType', e.target.value as RecurrenceType)
-          }
-          disabled={isSubmitting}
-          className="w-full px-3 py-2 border border-primary-border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent bg-primary-input text-primary-input-foreground"
-        >
-          <option value={RecurrenceType.DAILY}>Daily</option>
-          <option value={RecurrenceType.WEEKLY}>Weekly</option>
-          <option value={RecurrenceType.MONTHLY}>Monthly</option>
-          <option value={RecurrenceType.YEARLY}>Yearly</option>
-        </select>
-      </div>
-
-      {/* Recurrence Interval */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          Repeat every <span className="text-destructive">*</span>
-        </label>
-        <div className="flex items-center space-x-3">
-          <input
-            type="number"
-            min="1"
-            max="99"
-            value={formData.recurrenceInterval}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-primary-foreground mb-2">
+            Frequency <span className="text-destructive">*</span>
+          </label>
+          <select
+            value={formData.recurrenceType}
             onChange={(e) =>
-              updateFormData('recurrenceInterval', e.target.value)
+              updateFormData('recurrenceType', e.target.value as RecurrenceType)
             }
             disabled={isSubmitting}
-            className={`w-20 px-3 py-2 border rounded-lg text-center focus:ring-2 focus:ring-primary-accent focus:border-transparent ${
-              errors.recurrenceInterval
-                ? 'border-destructive'
-                : 'border-primary-border'
-            }`}
-          />
-          <span className="text-primary-foreground">
-            {formData.recurrenceType === RecurrenceType.DAILY &&
-              (parseInt(formData.recurrenceInterval) === 1 ? 'day' : 'days')}
-            {formData.recurrenceType === RecurrenceType.WEEKLY &&
-              (parseInt(formData.recurrenceInterval) === 1 ? 'week' : 'weeks')}
-            {formData.recurrenceType === RecurrenceType.MONTHLY &&
-              (parseInt(formData.recurrenceInterval) === 1
-                ? 'month'
-                : 'months')}
-            {formData.recurrenceType === RecurrenceType.YEARLY &&
-              (parseInt(formData.recurrenceInterval) === 1 ? 'year' : 'years')}
-          </span>
+            className="w-full px-3 py-2 border border-primary-border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent bg-primary-input text-primary-input-foreground"
+          >
+            <option value={RecurrenceType.DAILY}>Daily</option>
+            <option value={RecurrenceType.WEEKLY}>Weekly</option>
+            <option value={RecurrenceType.MONTHLY}>Monthly</option>
+            <option value={RecurrenceType.YEARLY}>Yearly</option>
+          </select>
         </div>
-        {errors.recurrenceInterval && (
-          <p className="mt-1 text-sm text-destructive">
-            {errors.recurrenceInterval}
-          </p>
-        )}
+
+        <div>
+          <label className="block text-sm font-medium text-primary-foreground mb-2">
+            Repeat every <span className="text-destructive">*</span>
+          </label>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <input
+              type="number"
+              min="1"
+              max="99"
+              value={formData.recurrenceInterval}
+              onChange={(e) =>
+                updateFormData('recurrenceInterval', e.target.value)
+              }
+              disabled={isSubmitting}
+              className={`w-16 sm:w-20 px-2 sm:px-3 py-2 border rounded-lg text-center text-sm sm:text-base focus:ring-2 focus:ring-primary-accent focus:border-transparent ${
+                errors.recurrenceInterval
+                  ? 'border-destructive'
+                  : 'border-primary-border'
+              }`}
+            />
+            <span className="text-primary-foreground text-sm sm:text-base">
+              {formData.recurrenceType === RecurrenceType.DAILY &&
+                (parseInt(formData.recurrenceInterval) === 1 ? 'day' : 'days')}
+              {formData.recurrenceType === RecurrenceType.WEEKLY &&
+                (parseInt(formData.recurrenceInterval) === 1
+                  ? 'week'
+                  : 'weeks')}
+              {formData.recurrenceType === RecurrenceType.MONTHLY &&
+                (parseInt(formData.recurrenceInterval) === 1
+                  ? 'month'
+                  : 'months')}
+              {formData.recurrenceType === RecurrenceType.YEARLY &&
+                (parseInt(formData.recurrenceInterval) === 1
+                  ? 'year'
+                  : 'years')}
+            </span>
+          </div>
+          {errors.recurrenceInterval && (
+            <p className="mt-1 text-sm text-destructive">
+              {errors.recurrenceInterval}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Day of Week for Weekly */}
@@ -353,44 +346,45 @@ export default function AutoTransactionForm({
         </div>
       )}
 
-      {/* Start Date */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          Start Date <span className="text-destructive">*</span>
-        </label>
-        <input
-          type="date"
-          value={formData.startDate}
-          onChange={(e) => updateFormData('startDate', e.target.value)}
-          required
-          disabled={isSubmitting}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent ${
-            errors.startDate ? 'border-destructive' : 'border-primary-border'
-          }`}
-        />
-        <p className="mt-1 text-xs text-primary-muted">
-          When should the first transaction occur?
-        </p>
-        {errors.startDate && (
-          <p className="mt-1 text-sm text-destructive">{errors.startDate}</p>
-        )}
-      </div>
+      {/* Date Range */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-primary-foreground mb-2">
+            Start Date <span className="text-destructive">*</span>
+          </label>
+          <input
+            type="date"
+            value={formData.startDate}
+            onChange={(e) => updateFormData('startDate', e.target.value)}
+            required
+            disabled={isSubmitting}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent ${
+              errors.startDate ? 'border-destructive' : 'border-primary-border'
+            }`}
+          />
+          <p className="mt-1 text-xs text-primary-muted">
+            When should the first transaction occur?
+          </p>
+          {errors.startDate && (
+            <p className="mt-1 text-sm text-destructive">{errors.startDate}</p>
+          )}
+        </div>
 
-      {/* End Date */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          End Date (Optional)
-        </label>
-        <input
-          type="date"
-          value={formData.endDate}
-          onChange={(e) => updateFormData('endDate', e.target.value)}
-          disabled={isSubmitting}
-          className="w-full px-3 py-2 border border-primary-border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent"
-        />
-        <p className="mt-1 text-xs text-primary-muted">
-          Leave empty to continue indefinitely
-        </p>
+        <div>
+          <label className="block text-sm font-medium text-primary-foreground mb-2">
+            End Date (Optional)
+          </label>
+          <input
+            type="date"
+            value={formData.endDate}
+            onChange={(e) => updateFormData('endDate', e.target.value)}
+            disabled={isSubmitting}
+            className="w-full px-3 py-2 border border-primary-border rounded-lg focus:ring-2 focus:ring-primary-accent focus:border-transparent"
+          />
+          <p className="mt-1 text-xs text-primary-muted">
+            Leave empty to continue indefinitely
+          </p>
+        </div>
       </div>
 
       {/* Notes */}
@@ -429,25 +423,25 @@ export default function AutoTransactionForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex space-x-4 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-primary-border/30">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 px-4 py-2 border border-primary-border text-primary-foreground rounded-lg hover:bg-primary-card/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-4 py-2.5 sm:py-2 border border-primary-border text-primary-foreground rounded-lg hover:bg-primary-card/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 px-4 py-2 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-4 py-2.5 sm:py-2 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
         >
           {isSubmitting
             ? 'Saving...'
             : initialData
-            ? 'Update Auto Transaction'
-            : 'Create Auto Transaction'}
+            ? 'Update Transaction'
+            : 'Create Transaction'}
         </button>
       </div>
     </form>

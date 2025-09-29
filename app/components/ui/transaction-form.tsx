@@ -8,9 +8,8 @@ import {
   Transaction,
 } from '../../types/transaction';
 import { CurrencyCode } from '../../lib/currency';
-import AmountInput from './amount-input';
+import AmountCurrencyInput from './amount-currency-input';
 import CategorySelector from './category-selector';
-import CurrencySelector from './currency-selector';
 
 interface TransactionFormProps {
   initialData?: Transaction;
@@ -103,18 +102,18 @@ export default function TransactionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {/* Transaction Type */}
       <div>
         <label className="block text-sm font-medium text-primary-foreground mb-2">
           Transaction Type
         </label>
-        <div className="flex space-x-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => updateFormData('type', TransactionType.EXPENSE)}
             disabled={isSubmitting}
-            className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 ${
+            className={`py-2 px-3 sm:px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 text-sm sm:text-base ${
               formData.type === TransactionType.EXPENSE
                 ? 'border-destructive bg-destructive/10 text-destructive'
                 : 'border-primary-border text-primary-foreground hover:border-primary-accent'
@@ -127,9 +126,9 @@ export default function TransactionForm({
             type="button"
             onClick={() => updateFormData('type', TransactionType.INCOME)}
             disabled={isSubmitting}
-            className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 ${
+            className={`py-2 px-3 sm:px-4 rounded-lg border-2 font-medium transition-all flex items-center justify-center space-x-2 text-sm sm:text-base ${
               formData.type === TransactionType.INCOME
-                ? 'border-green-500 bg-green-50 text-green-700'
+                ? 'border-success bg-success/10 text-success'
                 : 'border-primary-border text-primary-foreground hover:border-primary-accent'
             }`}
           >
@@ -139,31 +138,20 @@ export default function TransactionForm({
         </div>
       </div>
 
-      {/* Amount */}
-      <div>
-        <label className="block text-sm font-medium text-primary-foreground mb-2">
-          Amount <span className="text-destructive">*</span>
-        </label>
-        <AmountInput
-          value={formData.amount}
-          onChange={(value) => updateFormData('amount', value)}
-          currency={formData.currency as CurrencyCode}
-          error={errors.amount}
-          required
-          disabled={isSubmitting}
-        />
-      </div>
-
-      {/* Currency */}
-      <div>
-        <CurrencySelector
-          value={formData.currency as CurrencyCode}
-          onChange={(currency) => updateFormData('currency', currency)}
-          disabled={isSubmitting}
-          label="Currency"
-          required
-        />
-      </div>
+      {/* Amount & Currency */}
+      <AmountCurrencyInput
+        value={formData.amount}
+        onChange={(value: string) => updateFormData('amount', value)}
+        currency={formData.currency as CurrencyCode}
+        onCurrencyChange={(currency: CurrencyCode) =>
+          updateFormData('currency', currency)
+        }
+        error={errors.amount}
+        required
+        disabled={isSubmitting}
+        label="Amount"
+        showCurrencyName={false}
+      />
 
       {/* Description */}
       <div>
@@ -258,19 +246,19 @@ export default function TransactionForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex space-x-4 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-primary-border/30">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 px-4 py-2 border border-primary-border text-primary-foreground rounded-lg hover:bg-primary-card/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-4 py-2.5 sm:py-2 border border-primary-border text-primary-foreground rounded-lg hover:bg-primary-card/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-primary-accent text-primary-accent-foreground hover:bg-primary-accent/90"
+          className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-primary-accent text-primary-accent-foreground hover:bg-primary-accent/90 transition-colors text-sm sm:text-base font-medium"
         >
           {isSubmitting
             ? 'Saving...'
