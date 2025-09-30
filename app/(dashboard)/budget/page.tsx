@@ -35,11 +35,11 @@ import { useBudgetCache, useCacheUtils } from '../../hooks/useDataCache';
 export default function BudgetPage() {
   const { data: session } = useSession();
   const { preferences } = useUserPreferences();
-  const { 
-    getCachedBudgets, 
-    fetchBudgets: fetchBudgetsFromCache, 
-    invalidateBudgets, 
-    isLoading: cacheLoading 
+  const {
+    getCachedBudgets,
+    fetchBudgets: fetchBudgetsFromCache,
+    invalidateBudgets,
+    isLoading: cacheLoading,
   } = useBudgetCache();
   const { invalidateBudgetRelated } = useCacheUtils();
   const [budgets, setBudgets] = useState<BudgetWithSpending[]>([]);
@@ -82,13 +82,16 @@ export default function BudgetPage() {
   // Load budgets using cache
   const loadBudgets = async (forceRefresh = false) => {
     if (!session?.user?.id) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Try to get cached data first
       if (!forceRefresh) {
-        const cachedData = getCachedBudgets() as { budgets?: BudgetWithSpending[]; stats?: BudgetStats } | null;
+        const cachedData = getCachedBudgets() as {
+          budgets?: BudgetWithSpending[];
+          stats?: BudgetStats;
+        } | null;
         if (cachedData) {
           setBudgets(cachedData.budgets || []);
           setStats(cachedData.stats || null);
@@ -150,7 +153,7 @@ export default function BudgetPage() {
       );
       setShowBudgetForm(false);
       setEditingBudget(null);
-      
+
       // Invalidate cache and refresh
       invalidateBudgets();
       loadBudgets(true);
@@ -230,7 +233,7 @@ export default function BudgetPage() {
 
       toast.success('Budget deleted successfully');
       setDeleteConfirm({ isOpen: false, budgetId: null, budgetName: '' });
-      
+
       // Invalidate cache and refresh
       invalidateBudgets();
       loadBudgets(true);
