@@ -30,10 +30,18 @@ import Modal from '../../components/ui/modal';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../../components/ui/confirm-modal';
 import PageHeader from '../../components/ui/page-header';
+import { useBudgetCache, useCacheUtils } from '../../hooks/useDataCache';
 
 export default function BudgetPage() {
   const { data: session } = useSession();
   const { preferences } = useUserPreferences();
+  const { 
+    getCachedBudgets, 
+    fetchBudgets: fetchBudgetsFromCache, 
+    invalidateBudgets, 
+    isLoading: cacheLoading 
+  } = useBudgetCache();
+  const { invalidateBudgetRelated } = useCacheUtils();
   const [budgets, setBudgets] = useState<BudgetWithSpending[]>([]);
   const [stats, setStats] = useState<BudgetStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,20 +79,26 @@ export default function BudgetPage() {
     budgetName: '',
   });
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchBudgets();
-    }
-  }, [session?.user?.id]);
-
-  const fetchBudgets = async () => {
+  // Load budgets using cache
+  const loadBudgets = async (forceRefresh = false) => {
+    if (!session?.user?.id) return;
+    
     try {
       setLoading(true);
-      const response = await fetch('/api/budget');
-      if (!response.ok) {
-        throw new Error('Failed to fetch budgets');
+      
+      // Try to get cached data first
+      if (!forceRefresh) {
+        const cachedData = getCachedBudgets() as { budgets?: BudgetWithSpending[]; stats?: BudgetStats } | null;
+        if (cachedData) {
+          setBudgets(cachedData.budgets || []);
+          setStats(cachedData.stats || null);
+          setLoading(false);
+          return;
+        }
       }
-      const data = await response.json();
+
+      // Fetch from API and cache
+      const data = await fetchBudgetsFromCache(forceRefresh);
       setBudgets(data.budgets || []);
       setStats(data.stats || null);
     } catch (error) {
@@ -94,6 +108,10 @@ export default function BudgetPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadBudgets();
+  }, [session?.user?.id]);
 
   const handleSubmitBudget = async (formData: BudgetFormData) => {
     try {
@@ -132,7 +150,10 @@ export default function BudgetPage() {
       );
       setShowBudgetForm(false);
       setEditingBudget(null);
-      fetchBudgets();
+      
+      // Invalidate cache and refresh
+      invalidateBudgets();
+      loadBudgets(true);
     } catch (error) {
       console.error('Error saving budget:', error);
       toast.error(
@@ -209,7 +230,10 @@ export default function BudgetPage() {
 
       toast.success('Budget deleted successfully');
       setDeleteConfirm({ isOpen: false, budgetId: null, budgetName: '' });
-      fetchBudgets();
+      
+      // Invalidate cache and refresh
+      invalidateBudgets();
+      loadBudgets(true);
     } catch (error) {
       console.error('Error deleting budget:', error);
       toast.error('Failed to delete budget');
@@ -219,7 +243,7 @@ export default function BudgetPage() {
   const categoryBudgets = budgets.filter((b) => !b.isOverall);
   const overallBudget = budgets.find((b) => b.isOverall);
 
-  if (loading) {
+  if (loading || cacheLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent"></div>

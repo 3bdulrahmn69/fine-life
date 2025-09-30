@@ -23,6 +23,10 @@ const CACHE_CONFIG = {
     ttl: 4 * 60 * 1000, // 4 minutes
     keyPrefix: 'monthly_data_',
   },
+  budgets: {
+    ttl: 5 * 60 * 1000, // 5 minutes
+    key: 'budgets_cache',
+  },
 };
 
 class MemoryCache {
@@ -225,6 +229,74 @@ export const useStatsCache = () => {
   };
 };
 
+// Cache hook for budgets
+export const useBudgetCache = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef<Promise<any> | null>(null);
+
+  const getCachedBudgets = useCallback(() => {
+    return globalCache.get(CACHE_CONFIG.budgets.key);
+  }, []);
+
+  const fetchBudgets = useCallback(async (forceRefresh = false) => {
+    const cacheKey = CACHE_CONFIG.budgets.key;
+
+    // Return cached data if available and not forcing refresh
+    if (!forceRefresh && globalCache.has(cacheKey)) {
+      return globalCache.get(cacheKey);
+    }
+
+    // Prevent multiple simultaneous requests
+    if (fetchingRef.current && !forceRefresh) {
+      return fetchingRef.current;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch('/api/budget');
+        if (!response.ok) {
+          throw new Error('Failed to fetch budgets');
+        }
+
+        const data = await response.json();
+
+        // Cache the data
+        globalCache.set(cacheKey, data, CACHE_CONFIG.budgets.ttl);
+
+        return data;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to fetch budgets';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+        fetchingRef.current = null;
+      }
+    })();
+
+    fetchingRef.current = fetchPromise;
+    return fetchPromise;
+  }, []);
+
+  const invalidateBudgets = useCallback(() => {
+    globalCache.invalidate(CACHE_CONFIG.budgets.key);
+  }, []);
+
+  return {
+    getCachedBudgets,
+    fetchBudgets,
+    invalidateBudgets,
+    isLoading,
+    error,
+    hasCachedData: globalCache.has(CACHE_CONFIG.budgets.key),
+  };
+};
+
 // Cache hook for monthly data (overview page)
 export const useMonthlyDataCache = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -378,8 +450,13 @@ export const useCacheUtils = () => {
     globalCache.invalidatePattern(CACHE_CONFIG.monthlyData.keyPrefix);
   }, []);
 
+  const invalidateBudgetRelated = useCallback(() => {
+    globalCache.invalidate(CACHE_CONFIG.budgets.key);
+  }, []);
+
   return {
     invalidateAll,
     invalidateTransactionRelated,
+    invalidateBudgetRelated,
   };
 };
