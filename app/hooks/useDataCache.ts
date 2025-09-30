@@ -352,7 +352,7 @@ export const useMonthlyDataCache = () => {
       const fetchPromise = (async () => {
         try {
           const startOfMonth = new Date(year, month, 1);
-          const endOfMonth = new Date(year, month + 1, 0);
+          const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
           let url = '';
           let limit = '';

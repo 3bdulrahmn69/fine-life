@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/button';
@@ -57,11 +57,15 @@ export default function OverviewPage() {
   } = useMonthYearNavigation();
 
   const [monthlyStats, setMonthlyStats] = useState<any>(null);
+  const [previousMonthStats, setPreviousMonthStats] = useState<any>(null);
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
   const [monthlyRecentTransactions, setMonthlyRecentTransactions] = useState<
     any[]
   >([]);
   const [isLoadingMonthly, setIsLoadingMonthly] = useState(false);
+
+  // Track previous currency to detect changes and invalidate cache
+  const previousCurrencyRef = useRef<string>(preferences.currency);
 
   // Monthly data cache hook
   const {
@@ -72,109 +76,276 @@ export default function OverviewPage() {
   } = useMonthlyDataCache();
 
   // Fetch monthly data function with caching and currency conversion
-  const loadMonthlyData = async (forceRefresh = false) => {
-    if (!session || !preferences.currency) return;
+  const loadMonthlyData = useCallback(
+    async (forceRefresh = false) => {
+      if (!session || !preferences.currency) return;
 
-    try {
-      setIsLoadingMonthly(true);
+      try {
+        setIsLoadingMonthly(true);
 
-      // Fetch fresh data (with cache)
-      const [statsData, transactionsData, recentData] = await Promise.all([
-        fetchMonthlyData(selectedYear, selectedMonth, 'stats', forceRefresh),
-        fetchMonthlyData(
-          selectedYear,
-          selectedMonth,
-          'transactions',
-          forceRefresh
-        ),
-        fetchMonthlyData(selectedYear, selectedMonth, 'recent', forceRefresh),
-      ]);
+        // Calculate previous month for comparison
+        let prevYear = selectedYear;
+        let prevMonth = selectedMonth - 1;
+        if (prevMonth < 0) {
+          prevMonth = 11;
+          prevYear = selectedYear - 1;
+        }
 
-      // Process transactions with currency conversion
-      if (transactionsData && Array.isArray(transactionsData)) {
-        // Convert transactions to user currency and calculate totals
-        const convertedStats = await calculateMonthlyTotals(
-          transactionsData,
-          preferences.currency
-        );
+        // Fetch fresh data (with cache) - current and previous month
+        const [statsData, transactionsData, recentData, prevTransactionsData] =
+          await Promise.all([
+            fetchMonthlyData(
+              selectedYear,
+              selectedMonth,
+              'stats',
+              forceRefresh
+            ),
+            fetchMonthlyData(
+              selectedYear,
+              selectedMonth,
+              'transactions',
+              forceRefresh
+            ),
+            fetchMonthlyData(
+              selectedYear,
+              selectedMonth,
+              'recent',
+              forceRefresh
+            ),
+            fetchMonthlyData(prevYear, prevMonth, 'transactions', forceRefresh),
+          ]);
 
-        // Update stats with converted amounts
-        setMonthlyStats({
-          totalIncome: convertedStats.totalIncome,
-          totalExpenses: convertedStats.totalExpenses,
-          balance: convertedStats.netAmount,
-          transactionCount: convertedStats.transactionCount,
-        });
+        // Process transactions with currency conversion
+        if (transactionsData && Array.isArray(transactionsData)) {
+          // Convert transactions to user currency and calculate totals
+          const convertedStats = await calculateMonthlyTotals(
+            transactionsData,
+            preferences.currency
+          );
 
-        // Convert transactions for display
-        const convertedTransactions = await convertTransactionsToUserCurrency(
-          transactionsData,
-          preferences.currency
-        );
+          // Convert transactions for display and calculate non-mandatory expenses
+          const convertedTransactions = await convertTransactionsToUserCurrency(
+            transactionsData,
+            preferences.currency
+          );
 
-        setMonthlyTransactions(convertedTransactions);
+          // Calculate non-mandatory expenses (can be saved)
+          const nonMandatoryExpenses = convertedTransactions
+            .filter((t) => t.type === 'expense' && !t.isMandatory)
+            .reduce((sum, t) => sum + t.convertedAmount, 0);
+
+          // Update stats with converted amounts
+          setMonthlyStats({
+            totalIncome: convertedStats.totalIncome,
+            totalExpenses: convertedStats.totalExpenses,
+            balance: convertedStats.netAmount,
+            transactionCount: convertedStats.transactionCount,
+            canBeSaved: nonMandatoryExpenses,
+          });
+
+          setMonthlyTransactions(convertedTransactions);
+        }
+
+        // Process previous month's transactions for comparison
+        if (prevTransactionsData && Array.isArray(prevTransactionsData)) {
+          const prevConvertedStats = await calculateMonthlyTotals(
+            prevTransactionsData,
+            preferences.currency
+          );
+
+          const prevConvertedTransactions =
+            await convertTransactionsToUserCurrency(
+              prevTransactionsData,
+              preferences.currency
+            );
+
+          // Calculate previous month non-mandatory expenses
+          const prevNonMandatoryExpenses = prevConvertedTransactions
+            .filter((t) => t.type === 'expense' && !t.isMandatory)
+            .reduce((sum, t) => sum + t.convertedAmount, 0);
+
+          setPreviousMonthStats({
+            totalIncome: prevConvertedStats.totalIncome,
+            totalExpenses: prevConvertedStats.totalExpenses,
+            balance: prevConvertedStats.netAmount,
+            transactionCount: prevConvertedStats.transactionCount,
+            canBeSaved: prevNonMandatoryExpenses,
+          });
+        } else {
+          // No previous month data
+          setPreviousMonthStats(null);
+        }
+
+        // Process recent transactions with currency conversion
+        if (recentData && Array.isArray(recentData)) {
+          const convertedRecent = await convertTransactionsToUserCurrency(
+            recentData,
+            preferences.currency
+          );
+          setMonthlyRecentTransactions(convertedRecent);
+        }
+      } catch (error) {
+        console.error('Error loading monthly data:', error);
+      } finally {
+        setIsLoadingMonthly(false);
       }
+    },
+    [
+      session,
+      preferences.currency,
+      selectedYear,
+      selectedMonth,
+      fetchMonthlyData,
+    ]
+  );
 
-      // Process recent transactions with currency conversion
-      if (recentData && Array.isArray(recentData)) {
-        const convertedRecent = await convertTransactionsToUserCurrency(
-          recentData,
-          preferences.currency
-        );
-        setMonthlyRecentTransactions(convertedRecent);
-      }
-    } catch (error) {
-      console.error('Error loading monthly data:', error);
-    } finally {
-      setIsLoadingMonthly(false);
+  // Effect to handle currency changes and invalidate cache
+  useEffect(() => {
+    const currentCurrency = preferences.currency;
+    const previousCurrency = previousCurrencyRef.current;
+
+    if (
+      currentCurrency &&
+      previousCurrency &&
+      currentCurrency !== previousCurrency
+    ) {
+      // Currency changed, invalidate all monthly cache to force fresh conversion
+      invalidateMonthlyData();
+      previousCurrencyRef.current = currentCurrency;
+    } else if (currentCurrency && !previousCurrency) {
+      // Initial currency set
+      previousCurrencyRef.current = currentCurrency;
+    }
+  }, [preferences.currency, invalidateMonthlyData]);
+
+  // Effect to load monthly data when month/year changes or currency changes
+  useEffect(() => {
+    loadMonthlyData();
+  }, [loadMonthlyData]);
+
+  // Helper function to calculate percentage change
+  const calculatePercentageChange = (
+    current: number,
+    previous: number
+  ): { change: string; trend: 'up' | 'down' | 'neutral' } => {
+    if (!previous || previous === 0) {
+      if (current > 0) return { change: '+100%', trend: 'up' };
+      if (current < 0) return { change: '-100%', trend: 'down' };
+      return { change: '0%', trend: 'neutral' };
+    }
+
+    const percentChange = ((current - previous) / Math.abs(previous)) * 100;
+    const roundedChange = Math.round(percentChange * 10) / 10; // Round to 1 decimal place
+
+    if (roundedChange > 0) {
+      return { change: `+${roundedChange}%`, trend: 'up' };
+    } else if (roundedChange < 0) {
+      return { change: `${roundedChange}%`, trend: 'down' };
+    } else {
+      return { change: '0%', trend: 'neutral' };
     }
   };
 
-  // Effect to load monthly data when month/year changes
-  useEffect(() => {
-    loadMonthlyData();
-  }, [session, selectedMonth, selectedYear]);
+  // Helper function for expenses - inverts the trend logic (less spending = good = green)
+  const calculateExpensesChange = (
+    current: number,
+    previous: number
+  ): { change: string; trend: 'up' | 'down' | 'neutral' } => {
+    if (!previous || previous === 0) {
+      if (current > 0) return { change: '+100%', trend: 'down' };
+      if (current < 0) return { change: '-100%', trend: 'up' };
+      return { change: '0%', trend: 'neutral' };
+    }
 
-  // Calculate stats with monthly data
+    const percentChange = ((current - previous) / Math.abs(previous)) * 100;
+    const roundedChange = Math.round(percentChange * 10) / 10;
+
+    if (roundedChange > 0) {
+      return { change: `+${roundedChange}%`, trend: 'down' }; // More expenses = bad = red
+    } else if (roundedChange < 0) {
+      return { change: `${roundedChange}%`, trend: 'up' }; // Less expenses = good = green
+    } else {
+      return { change: '0%', trend: 'neutral' };
+    }
+  };
+
+  // Helper function for "Can be Saved" - inverts the trend logic (more "can be saved" = bad = red)
+  const calculateSavingsChange = (
+    current: number,
+    previous: number
+  ): { change: string; trend: 'up' | 'down' | 'neutral' } => {
+    if (!previous || previous === 0) {
+      if (current > 0) return { change: '+100%', trend: 'down' }; // New "can be saved" = bad = red
+      if (current < 0) return { change: '-100%', trend: 'up' };
+      return { change: '0%', trend: 'neutral' };
+    }
+
+    const percentChange = ((current - previous) / Math.abs(previous)) * 100;
+    const roundedChange = Math.round(percentChange * 10) / 10;
+
+    if (roundedChange > 0) {
+      return { change: `+${roundedChange}%`, trend: 'down' }; // More "can be saved" = bad = red
+    } else if (roundedChange < 0) {
+      return { change: `${roundedChange}%`, trend: 'up' }; // Less "can be saved" = good = green
+    } else {
+      return { change: '0%', trend: 'neutral' };
+    }
+  };
+
+  // Calculate stats with monthly data in the requested order
   const currentStats = [
-    {
-      title: 'Monthly Balance',
-      value: monthlyStats
-        ? formatCurrency(monthlyStats.balance, preferences.currency)
-        : formatCurrency(0, preferences.currency),
-      change: monthlyStats && monthlyStats.balance >= 0 ? '+100%' : '0%',
-      trend: monthlyStats && monthlyStats.balance >= 0 ? 'up' : 'down',
-      icon: BiWallet,
-      color:
-        monthlyStats && monthlyStats.balance >= 0
-          ? 'bg-green-500'
-          : 'bg-red-500',
-    },
     {
       title: 'Monthly Income',
       value: monthlyStats
         ? formatCurrency(monthlyStats.totalIncome, preferences.currency)
         : formatCurrency(0, preferences.currency),
-      change: '+0%', // TODO: Calculate change from previous month
-      trend: 'up',
+      ...(() => {
+        const current = monthlyStats?.totalIncome || 0;
+        const previous = previousMonthStats?.totalIncome || 0;
+        return calculatePercentageChange(current, previous);
+      })(),
       icon: FiTrendingUp,
-      color: 'bg-blue-500',
+      color: 'bg-green-500',
     },
     {
       title: 'Monthly Expenses',
       value: monthlyStats
         ? formatCurrency(monthlyStats.totalExpenses, preferences.currency)
         : formatCurrency(0, preferences.currency),
-      change: '0%', // TODO: Calculate change from previous month
-      trend: 'down',
+      ...(() => {
+        const current = monthlyStats?.totalExpenses || 0;
+        const previous = previousMonthStats?.totalExpenses || 0;
+        return calculateExpensesChange(current, previous);
+      })(),
       icon: FiTrendingDown,
       color: 'bg-red-500',
     },
     {
-      title: 'Transactions',
-      value: monthlyStats ? monthlyStats.transactionCount.toString() : '0',
-      change: '+0%',
-      trend: 'up',
+      title: 'Monthly Saved',
+      value: monthlyStats
+        ? formatCurrency(monthlyStats.balance, preferences.currency)
+        : formatCurrency(0, preferences.currency),
+      ...(() => {
+        const current = monthlyStats?.balance || 0;
+        const previous = previousMonthStats?.balance || 0;
+        return calculatePercentageChange(current, previous);
+      })(),
+      icon: BiWallet,
+      color:
+        monthlyStats && monthlyStats.balance >= 0
+          ? 'bg-blue-500'
+          : 'bg-orange-500',
+    },
+    {
+      title: 'Can be Saved',
+      value: monthlyStats
+        ? formatCurrency(monthlyStats.canBeSaved || 0, preferences.currency)
+        : formatCurrency(0, preferences.currency),
+      ...(() => {
+        const current = monthlyStats?.canBeSaved || 0;
+        const previous = previousMonthStats?.canBeSaved || 0;
+        return calculateSavingsChange(current, previous);
+      })(),
       icon: FiTarget,
       color: 'bg-purple-500',
     },
