@@ -8,6 +8,7 @@ import TransactionCard from '../../components/ui/transaction-card';
 import TransactionModal from '../../components/ui/transaction-modal';
 import { FiBarChart, FiRepeat } from 'react-icons/fi';
 import MonthYearNavigator from '../../components/ui/month-year-navigator';
+import PageHeader from '../../components/ui/page-header';
 import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
 import {
   AutomaticTransaction,
@@ -385,193 +386,192 @@ export default function TransactionsPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground">
-            Transactions
-          </h1>
-          <p className="text-primary-muted-foreground mt-1 text-sm sm:text-base">
-            Track your income and expenses
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <button
-            onClick={() => setShowTransactionModal(true)}
-            className="bg-primary-accent text-primary-accent-foreground px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2 justify-center"
-          >
-            <span>+</span>
-            <span>Add Transaction</span>
-          </button>
-          <button
-            onClick={handleManageAutoTransactions}
-            className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center space-x-2 justify-center"
-          >
-            <FiRepeat className="w-4 h-4" />
-            <span>Manage Auto Transactions</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Month Navigation */}
-      <MonthYearNavigator
-        selectedMonth={currentMonth}
-        selectedYear={currentYear}
-        onPreviousMonth={goToPreviousMonth}
-        onNextMonth={goToNextMonth}
-        onCurrentMonth={goToCurrentMonth}
-        onMonthChange={setCurrentMonth}
-        onYearChange={setCurrentYear}
-        showDropdowns={true}
-        className="mb-6 sm:mb-8"
-      />
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="text-center py-16">
-          <div className="bg-primary-card/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent"></div>
-          </div>
-          <p className="text-primary-muted-foreground text-lg">
-            Loading your transactions...
-          </p>
-        </div>
-      )}
-
-      {/* Transactions List */}
-      {!isLoading && (
-        <div className="space-y-8">
-          {!currentMonthData ? (
-            <div className="text-center py-16">
-              <div className="bg-primary-card/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
-                <FiBarChart className="w-10 h-10 text-primary-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-primary-foreground mb-2">
-                No transactions for{' '}
-                {format(new Date(currentYear, currentMonth), 'MMMM yyyy')}
-              </h3>
-              <p className="text-primary-muted-foreground mb-8 max-w-md mx-auto">
-                Start tracking your finances by adding your first transaction
-                for this month.
-              </p>
+      <div className="space-y-6">
+        <PageHeader
+          icon={<FiBarChart className="w-5 h-5 text-primary-accent" />}
+          title="Transactions"
+          subtitle="Track your income and expenses"
+          customActions={
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowTransactionModal(true)}
-                className="bg-primary-accent text-primary-accent-foreground px-8 py-3 rounded-lg hover:bg-primary-accent/90 font-medium transition-colors"
+                className="bg-primary-accent text-primary-accent-foreground px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-accent/90 flex items-center space-x-2 justify-center"
               >
-                Add Transaction
+                <span>+</span>
+                <span>Add Transaction</span>
+              </button>
+              <button
+                onClick={handleManageAutoTransactions}
+                className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center space-x-2 justify-center"
+              >
+                <FiRepeat className="w-4 h-4" />
+                <span>Manage Auto Transactions</span>
               </button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Month Summary - Clean and Minimal */}
-              <div className="bg-gradient-to-r from-primary-card/40 to-primary-card/20 rounded-xl p-4 sm:p-6 border border-primary-border/30">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-                  <h2 className="text-lg sm:text-xl font-semibold text-primary-foreground">
-                    {currentMonthData.month} {currentMonthData.year}
-                  </h2>
-                  <div className="text-left sm:text-right w-full sm:w-auto">
-                    <div className="text-sm text-primary-muted-foreground mb-1">
-                      Net Balance
-                    </div>
-                    <div
-                      className={`text-xl sm:text-2xl font-bold ${
-                        currentMonthData.balance >= 0
-                          ? 'text-green-500'
-                          : 'text-red-500'
-                      }`}
-                    >
-                      {formatCurrency(
-                        Math.abs(currentMonthData.balance),
-                        preferences.currency
-                      )}
-                      {currentMonthData.balance < 0 && (
-                        <span className="text-sm ml-1">deficit</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+          }
+        />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                    <div className="text-sm text-green-600 font-medium mb-1">
-                      Income
-                    </div>
-                    <div className="text-lg sm:text-xl font-bold text-green-600">
-                      +
-                      {formatCurrency(
-                        currentMonthData.totalIncome,
-                        preferences.currency
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                    <div className="text-sm text-red-600 font-medium mb-1">
-                      Expenses
-                    </div>
-                    <div className="text-lg sm:text-xl font-bold text-red-600">
-                      -
-                      {formatCurrency(
-                        currentMonthData.totalExpenses,
-                        preferences.currency
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Month Navigation */}
+        <MonthYearNavigator
+          selectedMonth={currentMonth}
+          selectedYear={currentYear}
+          onPreviousMonth={goToPreviousMonth}
+          onNextMonth={goToNextMonth}
+          onCurrentMonth={goToCurrentMonth}
+          onMonthChange={setCurrentMonth}
+          onYearChange={setCurrentYear}
+          showDropdowns={true}
+          className="mb-6 sm:mb-8"
+        />
 
-              {/* Transactions by Day */}
-              <div className="space-y-4">
-                {currentMonthData.days.map((day) => (
-                  <div key={day.dateString} className="space-y-3">
-                    {/* Day Header - Clean and Minimal */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-3 sm:px-4 bg-primary-card/30 rounded-lg border-l-4 border-primary-accent gap-2 sm:gap-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
-                        <h3 className="text-base sm:text-lg font-semibold text-primary-foreground">
-                          {format(day.date, 'EEEE, MMM d')}
-                        </h3>
-                        <span className="text-xs sm:text-sm text-primary-muted-foreground">
-                          {day.transactions.length} transaction
-                          {day.transactions.length !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="text-left sm:text-right">
-                        <div className="text-xs sm:text-sm text-primary-muted-foreground mb-1">
-                          Daily Balance
-                        </div>
-                        <div
-                          className={`text-base sm:text-lg font-bold ${
-                            day.balance >= 0 ? 'text-green-500' : 'text-red-500'
-                          }`}
-                        >
-                          {day.balance >= 0 ? '+' : ''}
-                          {formatCurrency(
-                            Math.abs(day.balance),
-                            preferences.currency
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Day Transactions */}
-                    <div className="space-y-2 ml-0 sm:ml-4">
-                      {day.transactions.map((transaction) => (
-                        <TransactionCard
-                          key={transaction._id}
-                          transaction={transaction}
-                          currency={preferences.currency}
-                          onEdit={handleEdit}
-                          onDelete={handleDeleteClick}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-16">
+            <div className="bg-primary-card/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent"></div>
             </div>
-          )}
-        </div>
-      )}
+            <p className="text-primary-muted-foreground text-lg">
+              Loading your transactions...
+            </p>
+          </div>
+        )}
+
+        {/* Transactions List */}
+        {!isLoading && (
+          <div className="space-y-8">
+            {!currentMonthData ? (
+              <div className="text-center py-16">
+                <div className="bg-primary-card/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                  <FiBarChart className="w-10 h-10 text-primary-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold text-primary-foreground mb-2">
+                  No transactions for{' '}
+                  {format(new Date(currentYear, currentMonth), 'MMMM yyyy')}
+                </h3>
+                <p className="text-primary-muted-foreground mb-8 max-w-md mx-auto">
+                  Start tracking your finances by adding your first transaction
+                  for this month.
+                </p>
+                <button
+                  onClick={() => setShowTransactionModal(true)}
+                  className="bg-primary-accent text-primary-accent-foreground px-8 py-3 rounded-lg hover:bg-primary-accent/90 font-medium transition-colors"
+                >
+                  Add Transaction
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Month Summary - Clean and Minimal */}
+                <div className="bg-gradient-to-r from-primary-card/40 to-primary-card/20 rounded-xl p-4 sm:p-6 border border-primary-border/30">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                    <h2 className="text-lg sm:text-xl font-semibold text-primary-foreground">
+                      {currentMonthData.month} {currentMonthData.year}
+                    </h2>
+                    <div className="text-left sm:text-right w-full sm:w-auto">
+                      <div className="text-sm text-primary-muted-foreground mb-1">
+                        Net Balance
+                      </div>
+                      <div
+                        className={`text-xl sm:text-2xl font-bold ${
+                          currentMonthData.balance >= 0
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {formatCurrency(
+                          Math.abs(currentMonthData.balance),
+                          preferences.currency
+                        )}
+                        {currentMonthData.balance < 0 && (
+                          <span className="text-sm ml-1">deficit</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="text-sm text-green-600 font-medium mb-1">
+                        Income
+                      </div>
+                      <div className="text-lg sm:text-xl font-bold text-green-600">
+                        +
+                        {formatCurrency(
+                          currentMonthData.totalIncome,
+                          preferences.currency
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="text-sm text-red-600 font-medium mb-1">
+                        Expenses
+                      </div>
+                      <div className="text-lg sm:text-xl font-bold text-red-600">
+                        -
+                        {formatCurrency(
+                          currentMonthData.totalExpenses,
+                          preferences.currency
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transactions by Day */}
+                <div className="space-y-4">
+                  {currentMonthData.days.map((day) => (
+                    <div key={day.dateString} className="space-y-3">
+                      {/* Day Header - Clean and Minimal */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-3 sm:px-4 bg-primary-card/30 rounded-lg border-l-4 border-primary-accent gap-2 sm:gap-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3">
+                          <h3 className="text-base sm:text-lg font-semibold text-primary-foreground">
+                            {format(day.date, 'EEEE, MMM d')}
+                          </h3>
+                          <span className="text-xs sm:text-sm text-primary-muted-foreground">
+                            {day.transactions.length} transaction
+                            {day.transactions.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <div className="text-xs sm:text-sm text-primary-muted-foreground mb-1">
+                            Daily Balance
+                          </div>
+                          <div
+                            className={`text-base sm:text-lg font-bold ${
+                              day.balance >= 0
+                                ? 'text-green-500'
+                                : 'text-red-500'
+                            }`}
+                          >
+                            {day.balance >= 0 ? '+' : ''}
+                            {formatCurrency(
+                              Math.abs(day.balance),
+                              preferences.currency
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Day Transactions */}
+                      <div className="space-y-2 ml-0 sm:ml-4">
+                        {day.transactions.map((transaction) => (
+                          <TransactionCard
+                            key={transaction._id}
+                            transaction={transaction}
+                            currency={preferences.currency}
+                            onEdit={handleEdit}
+                            onDelete={handleDeleteClick}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Automatic Transactions Modal */}
       <Modal

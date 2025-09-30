@@ -5,7 +5,6 @@ const budgetSchema = new mongoose.Schema(
     userId: {
       type: String,
       required: true,
-      index: true,
     },
     name: {
       type: String,
@@ -55,7 +54,6 @@ const budgetSchema = new mongoose.Schema(
 
 // Create compound indices for efficient queries
 budgetSchema.index({ userId: 1, month: 1, year: 1 });
-budgetSchema.index({ userId: 1, category: 1, month: 1, year: 1 });
 budgetSchema.index({ userId: 1, isOverall: 1, month: 1, year: 1 });
 
 // Ensure only one overall budget per user per month/year

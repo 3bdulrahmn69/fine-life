@@ -27,9 +27,9 @@ import {
 import CircularProgress from '../../components/ui/circular-progress';
 import BudgetForm from '../../components/ui/budget-form';
 import Modal from '../../components/ui/modal';
-import Container from '../../components/ui/container';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../../components/ui/confirm-modal';
+import PageHeader from '../../components/ui/page-header';
 
 export default function BudgetPage() {
   const { data: session } = useSession();
@@ -42,6 +42,12 @@ export default function BudgetPage() {
     null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  };
+
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     budgetId: string | null;
@@ -210,262 +216,244 @@ export default function BudgetPage() {
     }
   };
 
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return now.toLocaleString('default', { month: 'long', year: 'numeric' });
-  };
-
   const categoryBudgets = budgets.filter((b) => !b.isOverall);
   const overallBudget = budgets.find((b) => b.isOverall);
 
   if (loading) {
     return (
-      <Container className="py-6">
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent"></div>
-        </div>
-      </Container>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-accent"></div>
+      </div>
     );
   }
 
   return (
-    <Container className="py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-accent/10 rounded-lg flex items-center justify-center">
-            <FiTarget className="w-5 h-5 text-primary-accent" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-primary-foreground">
-              Budget Tracker
-            </h1>
-            <p className="text-primary-muted-foreground">
-              {getCurrentMonth()} • Manage your spending limits
-            </p>
-          </div>
-        </div>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          icon={<FiTarget className="w-5 h-5 text-primary-accent" />}
+          title="Budget Tracker"
+          subtitle={`${getCurrentMonth()} • Manage your spending limits`}
+          actionButton={{
+            label: 'Create Budget',
+            onClick: () => setShowBudgetForm(true),
+            icon: <FiPlus className="w-4 h-4" />,
+          }}
+        />
 
-        <button
-          onClick={() => setShowBudgetForm(true)}
-          className="inline-flex items-center px-4 py-2 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 transition-colors font-medium"
-        >
-          <FiPlus className="w-4 h-4 mr-2" />
-          Create Budget
-        </button>
-      </div>
-
-      {/* Overall Budget */}
-      {overallBudget && (
-        <div className="bg-primary-card rounded-xl p-6 border border-primary-border">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-            <div className="flex-shrink-0">
-              <CircularProgress
-                percentage={overallBudget.percentage}
-                spent={overallBudget.spent}
-                total={overallBudget.amount}
-                currency={overallBudget.currency}
-                size={140}
-                strokeWidth={10}
-                isOverBudget={overallBudget.isOverBudget}
-              />
-            </div>
-
-            <div className="flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-primary-foreground">
-                    {overallBudget.name}
-                  </h2>
-                  <p className="text-primary-muted-foreground text-sm">
-                    Overall monthly spending limit
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleEditBudget(overallBudget)}
-                    className="p-2 text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50 rounded-lg transition-colors"
-                  >
-                    <FiEdit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteConfirm({
-                        isOpen: true,
-                        budgetId: overallBudget._id!,
-                        budgetName: overallBudget.name,
-                      })
-                    }
-                    className="p-2 text-primary-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                  >
-                    <FiTrash2 className="w-4 h-4" />
-                  </button>
-                </div>
+        {/* Overall Budget */}
+        {overallBudget && (
+          <div className="bg-primary-card rounded-xl p-6 border border-primary-border">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+              <div className="flex-shrink-0">
+                <CircularProgress
+                  percentage={overallBudget.percentage}
+                  spent={overallBudget.spent}
+                  total={overallBudget.amount}
+                  currency={overallBudget.currency}
+                  size={140}
+                  strokeWidth={10}
+                  isOverBudget={overallBudget.isOverBudget}
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-primary-input/30 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
-                    <FiTrendingDown className="w-3 h-3" />
-                    Total Spent
-                  </div>
-                  <div className="font-bold text-primary-foreground">
-                    {formatCurrency(
-                      overallBudget.spent,
-                      overallBudget.currency as CurrencyCode
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-primary-input/30 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
-                    <FiTrendingUp className="w-3 h-3" />
-                    Budget Limit
-                  </div>
-                  <div className="font-bold text-primary-foreground">
-                    {formatCurrency(
-                      overallBudget.amount,
-                      overallBudget.currency as CurrencyCode
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-primary-input/30 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
-                    <FiTarget className="w-3 h-3" />
-                    Remaining
-                  </div>
-                  <div
-                    className={`font-bold ${
-                      overallBudget.remaining >= 0
-                        ? 'text-success'
-                        : 'text-destructive'
-                    }`}
-                  >
-                    {formatCurrency(
-                      Math.abs(overallBudget.remaining),
-                      overallBudget.currency as CurrencyCode
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Category Budgets */}
-      {categoryBudgets.length > 0 ? (
-        <div>
-          <h2 className="text-lg font-semibold text-primary-foreground mb-4">
-            Category Budgets
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {categoryBudgets.map((budget) => (
-              <div
-                key={budget._id}
-                className="bg-primary-card rounded-xl p-6 border border-primary-border cursor-pointer hover:bg-primary-card/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg group"
-                onClick={() => handleViewCategoryTransactions(budget)}
-              >
-                <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>
-                    <h3 className="font-semibold text-primary-foreground">
-                      {budget.name}
-                    </h3>
-                    <p className="text-sm text-primary-muted-foreground capitalize">
-                      {budget.category}
+                    <h2 className="text-xl font-bold text-primary-foreground">
+                      {overallBudget.name}
+                    </h2>
+                    <p className="text-primary-muted-foreground text-sm">
+                      Overall monthly spending limit
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditBudget(budget);
-                      }}
-                      className="p-1.5 text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50 rounded-lg transition-colors"
+                      onClick={() => handleEditBudget(overallBudget)}
+                      className="p-2 text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50 rounded-lg transition-colors"
                     >
-                      <FiEdit className="w-3.5 h-3.5" />
+                      <FiEdit className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={() =>
                         setDeleteConfirm({
                           isOpen: true,
-                          budgetId: budget._id!,
-                          budgetName: budget.name,
-                        });
-                      }}
-                      className="p-1.5 text-primary-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                          budgetId: overallBudget._id!,
+                          budgetName: overallBudget.name,
+                        })
+                      }
+                      className="p-2 text-primary-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                     >
-                      <FiTrash2 className="w-3.5 h-3.5" />
+                      <FiTrash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex justify-center mb-4">
-                  <CircularProgress
-                    percentage={budget.percentage}
-                    spent={budget.spent}
-                    total={budget.amount}
-                    currency={budget.currency}
-                    size={110}
-                    strokeWidth={6}
-                    isOverBudget={budget.isOverBudget}
-                    showLabels={false}
-                  />
-                </div>
-
-                <div className="text-center">
-                  <div className="text-xs text-primary-muted-foreground">
-                    Remaining:{' '}
-                    {formatCurrency(
-                      Math.max(0, budget.remaining),
-                      budget.currency as CurrencyCode
-                    )}
-                  </div>
-                  {budget.isOverBudget && (
-                    <div className="text-xs text-destructive font-medium mt-1">
-                      Over budget by{' '}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-primary-input/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
+                      <FiTrendingDown className="w-3 h-3" />
+                      Total Spent
+                    </div>
+                    <div className="font-bold text-primary-foreground">
                       {formatCurrency(
-                        budget.spent - budget.amount,
-                        budget.currency as CurrencyCode
+                        overallBudget.spent,
+                        overallBudget.currency as CurrencyCode
                       )}
                     </div>
-                  )}
-                  <div className="flex items-center justify-center gap-1 text-xs text-primary-muted-foreground/60 mt-2 group-hover:text-primary-foreground/80 transition-colors">
-                    <FiEye className="w-3 h-3" />
-                    Click to view transactions
+                  </div>
+
+                  <div className="bg-primary-input/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
+                      <FiTrendingUp className="w-3 h-3" />
+                      Budget Limit
+                    </div>
+                    <div className="font-bold text-primary-foreground">
+                      {formatCurrency(
+                        overallBudget.amount,
+                        overallBudget.currency as CurrencyCode
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-primary-input/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-primary-muted-foreground text-xs mb-1">
+                      <FiTarget className="w-3 h-3" />
+                      Remaining
+                    </div>
+                    <div
+                      className={`font-bold ${
+                        overallBudget.remaining >= 0
+                          ? 'text-success'
+                          : 'text-destructive'
+                      }`}
+                    >
+                      {formatCurrency(
+                        Math.abs(overallBudget.remaining),
+                        overallBudget.currency as CurrencyCode
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        !overallBudget && (
-          <div className="text-center py-12 bg-primary-card rounded-xl border border-primary-border">
-            <div className="w-16 h-16 bg-primary-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiTarget className="w-8 h-8 text-primary-accent" />
             </div>
-            <h3 className="text-lg font-semibold text-primary-foreground mb-2">
-              No Budgets Set
-            </h3>
-            <p className="text-primary-muted-foreground mb-6">
-              Create your first budget to start tracking your spending limits
-              and take control of your finances.
-            </p>
-            <button
-              onClick={() => setShowBudgetForm(true)}
-              className="inline-flex items-center px-6 py-3 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 transition-colors font-medium"
-            >
-              <FiPlus className="w-4 h-4 mr-2" />
-              Create Your First Budget
-            </button>
           </div>
-        )
-      )}
+        )}
+
+        {/* Category Budgets */}
+        {categoryBudgets.length > 0 ? (
+          <div>
+            <h2 className="text-lg font-semibold text-primary-foreground mb-4">
+              Category Budgets
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {categoryBudgets.map((budget) => (
+                <div
+                  key={budget._id}
+                  className="bg-primary-card rounded-xl p-6 border border-primary-border cursor-pointer hover:bg-primary-card/80 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg group"
+                  onClick={() => handleViewCategoryTransactions(budget)}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-primary-foreground">
+                        {budget.name}
+                      </h3>
+                      <p className="text-sm text-primary-muted-foreground capitalize">
+                        {budget.category}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditBudget(budget);
+                        }}
+                        className="p-1.5 text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50 rounded-lg transition-colors"
+                      >
+                        <FiEdit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirm({
+                            isOpen: true,
+                            budgetId: budget._id!,
+                            budgetName: budget.name,
+                          });
+                        }}
+                        className="p-1.5 text-primary-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center mb-4">
+                    <CircularProgress
+                      percentage={budget.percentage}
+                      spent={budget.spent}
+                      total={budget.amount}
+                      currency={budget.currency}
+                      size={110}
+                      strokeWidth={6}
+                      isOverBudget={budget.isOverBudget}
+                      showLabels={false}
+                    />
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-xs text-primary-muted-foreground">
+                      Remaining:{' '}
+                      {formatCurrency(
+                        Math.max(0, budget.remaining),
+                        budget.currency as CurrencyCode
+                      )}
+                    </div>
+                    {budget.isOverBudget && (
+                      <div className="text-xs text-destructive font-medium mt-1">
+                        Over budget by{' '}
+                        {formatCurrency(
+                          budget.spent - budget.amount,
+                          budget.currency as CurrencyCode
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-center gap-1 text-xs text-primary-muted-foreground/60 mt-2 group-hover:text-primary-foreground/80 transition-colors">
+                      <FiEye className="w-3 h-3" />
+                      Click to view transactions
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          !overallBudget && (
+            <div className="text-center py-12 bg-primary-card rounded-xl border border-primary-border">
+              <div className="w-16 h-16 bg-primary-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiTarget className="w-8 h-8 text-primary-accent" />
+              </div>
+              <h3 className="text-lg font-semibold text-primary-foreground mb-2">
+                No Budgets Set
+              </h3>
+              <p className="text-primary-muted-foreground mb-6">
+                Create your first budget to start tracking your spending limits
+                and take control of your finances.
+              </p>
+              <button
+                onClick={() => setShowBudgetForm(true)}
+                className="inline-flex items-center px-6 py-3 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 transition-colors font-medium"
+              >
+                <FiPlus className="w-4 h-4 mr-2" />
+                Create Your First Budget
+              </button>
+            </div>
+          )
+        )}
+      </div>
 
       {/* Budget Form Modal */}
       <Modal
@@ -620,6 +608,6 @@ export default function BudgetPage() {
           )}
         </div>
       </Modal>
-    </Container>
+    </>
   );
 }

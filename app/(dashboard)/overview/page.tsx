@@ -27,7 +27,6 @@ import { format } from 'date-fns';
 import SpendingCategories from '../../components/ui/spending-categories';
 import TransactionModal from '../../components/ui/transaction-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
-import Container from '../../components/ui/container';
 import ConvertedAmount from '../../components/ui/converted-amount';
 import MonthYearNavigator from '../../components/ui/month-year-navigator';
 import {
@@ -36,6 +35,7 @@ import {
 } from '../../lib/transaction-converter';
 import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
 import { useMonthlyDataCache } from '../../hooks/useDataCache';
+import PageHeader from '../../components/ui/page-header';
 
 export default function OverviewPage() {
   const { data: session } = useSession();
@@ -181,28 +181,24 @@ export default function OverviewPage() {
   ];
 
   return (
-    <Container>
-      <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 mb-2">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground mb-3">
-              Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}!
-            </h1>
-            <p className="text-primary-muted-foreground text-sm sm:text-base leading-relaxed">
-              Here&apos;s your financial overview for{' '}
-              {format(new Date(selectedYear, selectedMonth), 'MMMM yyyy')}
-            </p>
-          </div>
-
-          <Button
-            onClick={() => setShowTransactionModal(true)}
-            className="bg-gradient-to-r from-primary-button to-primary-button-hover w-full sm:w-auto mt-4 sm:mt-0"
-          >
-            <FiPlus className="w-4 h-4 mr-2" />
-            Add Transaction
-          </Button>
-        </div>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          icon={<BiWallet className="w-5 h-5 text-primary-accent" />}
+          title={`Welcome back, ${
+            session?.user?.name?.split(' ')[0] || 'User'
+          }!`}
+          subtitle={`Here's your financial overview for ${format(
+            new Date(selectedYear, selectedMonth),
+            'MMMM yyyy'
+          )}`}
+          actionButton={{
+            label: 'Add Transaction',
+            onClick: () => setShowTransactionModal(true),
+            icon: <FiPlus className="w-4 h-4" />,
+          }}
+        />
 
         {/* Month/Year Navigation */}
         <MonthYearNavigator
@@ -404,20 +400,21 @@ export default function OverviewPage() {
             </CardContent>
           </Card>
         </div>
-        {/* Transaction Modal */}
-        <TransactionModal
-          isOpen={showTransactionModal}
-          onClose={() => setShowTransactionModal(false)}
-          onSuccess={() => {
-            // Refresh both general data and monthly data
-            refetch();
-            // Invalidate monthly cache and refresh
-            invalidateMonthlyData();
-            loadMonthlyData(true);
-          }}
-          currency={preferences.currency}
-        />
       </div>
-    </Container>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={showTransactionModal}
+        onClose={() => setShowTransactionModal(false)}
+        onSuccess={() => {
+          // Refresh both general data and monthly data
+          refetch();
+          // Invalidate monthly cache and refresh
+          invalidateMonthlyData();
+          loadMonthlyData(true);
+        }}
+        currency={preferences.currency}
+      />
+    </>
   );
 }
