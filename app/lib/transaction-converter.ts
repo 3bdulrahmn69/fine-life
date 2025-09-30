@@ -31,8 +31,21 @@ export async function convertTransactionToUserCurrency(
       userCurrency
     );
 
-    return {
-      ...transaction,
+    const converted = {
+      _id: transaction._id,
+      userId: transaction.userId,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      description: transaction.description,
+      category: transaction.category,
+      subcategory: transaction.subcategory,
+      notes: transaction.notes,
+      isMandatory: transaction.isMandatory,
+      isAutomatic: transaction.isAutomatic,
+      type: transaction.type,
+      date: transaction.date,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
       convertedAmount: conversionResult.convertedAmount,
       originalAmount,
       originalCurrency,
@@ -40,12 +53,27 @@ export async function convertTransactionToUserCurrency(
       conversionRate: conversionResult.rate,
       // Keep original amount field unchanged to prevent double conversion
     };
+
+    return converted;
   } catch (error) {
     console.error('Error converting transaction:', error);
 
     // Fallback: return original transaction with conversion values set to original
     return {
-      ...transaction,
+      _id: transaction._id,
+      userId: transaction.userId,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      description: transaction.description,
+      category: transaction.category,
+      subcategory: transaction.subcategory,
+      notes: transaction.notes,
+      isMandatory: transaction.isMandatory,
+      isAutomatic: transaction.isAutomatic,
+      type: transaction.type,
+      date: transaction.date,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
       convertedAmount: originalAmount,
       originalAmount,
       originalCurrency,
@@ -75,7 +103,20 @@ export async function convertTransactionsToUserCurrency(
 
     // Fallback: return transactions with original amounts
     return transactions.map((transaction) => ({
-      ...transaction,
+      _id: transaction._id,
+      userId: transaction.userId,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      description: transaction.description,
+      category: transaction.category,
+      subcategory: transaction.subcategory,
+      notes: transaction.notes,
+      isMandatory: transaction.isMandatory,
+      isAutomatic: transaction.isAutomatic,
+      type: transaction.type,
+      date: transaction.date,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
       convertedAmount: transaction.amount,
       originalAmount: transaction.amount,
       originalCurrency: (transaction.currency as CurrencyCode) || 'USD',

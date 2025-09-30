@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const month = searchParams.get('month');
+    const year = searchParams.get('year');
     const isMandatory = searchParams.get('isMandatory');
     const isAutomatic = searchParams.get('isAutomatic');
     const page = parseInt(searchParams.get('page') || '1');
@@ -32,7 +34,14 @@ export async function GET(request: NextRequest) {
     if (isMandatory !== null) query.isMandatory = isMandatory === 'true';
     if (isAutomatic !== null) query.isAutomatic = isAutomatic === 'true';
 
-    if (startDate || endDate) {
+    // Handle date filtering - month/year takes priority over startDate/endDate
+    if (month && year) {
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+      const startOfMonth = new Date(yearNum, monthNum - 1, 1);
+      const endOfMonth = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+      query.date = { $gte: startOfMonth, $lte: endOfMonth };
+    } else if (startDate || endDate) {
       const dateQuery: Record<string, Date> = {};
       if (startDate) dateQuery.$gte = new Date(startDate);
       if (endDate) dateQuery.$lte = new Date(endDate);
