@@ -53,7 +53,18 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Bulk Operations**: Efficient handling of multiple transactions
 - **Search & Filter**: Advanced filtering by date, category, type, and amount
 
-### 🔐 **Authentication & Security**
+### �📤 **Data Import & Export**
+
+- **Multi-Format Support**: Import and export transactions in CSV and Excel (.xlsx) formats
+- **Drag & Drop Upload**: Intuitive file upload with drag-and-drop functionality
+- **Excel Date Handling**: Smart conversion of Excel serial numbers to readable dates
+- **Flexible Date Formats**: Support for multiple date formats (YYYY-MM-DD, MM/DD/YYYY, YYYY/MM/DD, Excel dates)
+- **Data Validation**: Comprehensive validation with detailed error reporting
+- **File Size Limits**: Optimized file size limits (5MB for CSV, 10MB for Excel)
+- **Toast Notifications**: Modern toast notifications for all import/export operations
+- **Preview & Validation**: Real-time data preview with error highlighting before import
+
+### �🔐 **Authentication & Security**
 
 - **NextAuth Integration**: Secure authentication with multiple providers
 - **Session Management**: Persistent login sessions with automatic refresh
@@ -100,6 +111,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - date-fns 4.1.0 (Date Manipulation)
 - recharts 3.2.1 (Data Visualization)
 - react-toastify 11.0.5 (Notifications)
+- xlsx 0.18.5 (Excel File Processing)
 - clsx 2.1.1 (Conditional Classes)
 - tailwind-merge 3.3.1 (Tailwind Utilities)
 ```
