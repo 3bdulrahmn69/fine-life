@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { Transaction, TransactionType } from '../../types/transaction';
 import TransactionCard from '../../components/ui/transaction-card';
 import TransactionModal from '../../components/ui/transaction-modal';
-import { FiBarChart, FiRepeat } from 'react-icons/fi';
+import { FiBarChart, FiRepeat, FiDownload, FiUpload } from 'react-icons/fi';
 import MonthYearNavigator from '../../components/ui/month-year-navigator';
 import PageHeader from '../../components/ui/page-header';
 import { useMonthYearNavigation } from '../../hooks/useMonthYearNavigation';
@@ -18,6 +18,7 @@ import AutoTransactionForm from '../../components/ui/auto-transaction-form';
 import AutoTransactionList from '../../components/ui/auto-transaction-list';
 import Modal from '../../components/ui/modal';
 import ConfirmModal from '../../components/ui/confirm-modal';
+import ImportExportModal from '../../components/ui/import-export-modal';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { useTransactionCache, useCacheUtils } from '../../hooks/useDataCache';
 import { formatCurrency } from '../../lib/currency';
@@ -95,6 +96,9 @@ export default function TransactionsPage() {
     transactionId: null,
     transactionDescription: '',
   });
+
+  // Import/Export modal state
+  const [showImportExportModal, setShowImportExportModal] = useState(false);
 
   // Get current month data
   const currentMonthData = groupedTransactions.find(
@@ -374,6 +378,152 @@ export default function TransactionsPage() {
     }
   };
 
+  // Import functionality
+  const handleImportTransactions = async (transactions: any[]) => {
+    try {
+      const promises = transactions.map(async (transaction) => {
+        const response = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: Math.abs(transaction.amount),
+            currency: transaction.currency || 'USD',
+            description: transaction.description,
+            category: transaction.category,
+            subcategory: transaction.subcategory,
+            notes: transaction.notes,
+            isMandatory: false,
+            isAutomatic: false,
+            type: transaction.type,
+            date: new Date(transaction.date).toISOString(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            `Failed to import transaction: ${
+              errorData.error || 'Unknown error'
+            }`
+          );
+        }
+
+        return response.json();
+      });
+
+      await Promise.all(promises);
+
+      // Refresh the transaction data after successful import
+      await loadTransactions(true);
+      invalidateTransactionRelated();
+    } catch (error) {
+      console.error('Import failed:', error);
+      throw error;
+    }
+  };
+
+  // Export functionality
+  const handleExportTransactions = async (
+    startDate: Date,
+    endDate: Date,
+    exportFormat: 'csv' | 'xlsx'
+  ) => {
+    try {
+      const response = await fetch(
+        `/api/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&export=true`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions for export');
+      }
+
+      const data = await response.json();
+      const transactions = data.transactions || [];
+
+      const headers = [
+        'Date',
+        'Time',
+        'Description',
+        'Amount',
+        'Currency',
+        'Category',
+        'Subcategory',
+        'Type',
+        'Notes',
+        'Created At',
+      ];
+
+      const rows = transactions.map((transaction: any) => {
+        const transactionDate = new Date(transaction.date);
+        const createdDate = new Date(transaction.createdAt);
+
+        return [
+          format(transactionDate, 'yyyy-MM-dd'),
+          format(transactionDate, 'HH:mm:ss'),
+          transaction.description,
+          transaction.amount,
+          transaction.currency,
+          transaction.category || '',
+          transaction.subcategory || '',
+          transaction.type,
+          transaction.notes || '',
+          format(createdDate, 'yyyy-MM-dd HH:mm:ss'),
+        ];
+      });
+
+      if (exportFormat === 'xlsx') {
+        // Import XLSX library dynamically for client-side usage
+        const XLSX = await import('xlsx');
+
+        // Create workbook and worksheet
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+
+        // Generate and download file
+        const fileName = `transactions_${format(
+          startDate,
+          'yyyy-MM-dd'
+        )}_to_${format(endDate, 'yyyy-MM-dd')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+      } else {
+        // CSV format
+        const csvRows = [
+          headers.join(','),
+          ...rows.map((row: any[]) =>
+            row
+              .map((cell: any) => `"${String(cell).replace(/"/g, '""')}"`)
+              .join(',')
+          ),
+        ];
+
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `transactions_${format(
+          startDate,
+          'yyyy-MM-dd'
+        )}_to_${format(endDate, 'yyyy-MM-dd')}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
+      setShowImportExportModal(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+      throw error;
+    }
+  };
+
   if (!session) {
     return (
       <div className="text-center py-12">
@@ -406,6 +556,14 @@ export default function TransactionsPage() {
               >
                 <FiRepeat className="w-4 h-4" />
                 <span>Manage Auto Transactions</span>
+              </button>
+              <button
+                onClick={() => setShowImportExportModal(true)}
+                className="bg-green-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2 justify-center"
+              >
+                <FiDownload className="w-4 h-4" />
+                <span>/</span>
+                <FiUpload className="w-4 h-4" />
               </button>
             </div>
           }
@@ -624,6 +782,14 @@ export default function TransactionsPage() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Import/Export Modal */}
+      <ImportExportModal
+        isOpen={showImportExportModal}
+        onClose={() => setShowImportExportModal(false)}
+        onExport={handleExportTransactions}
+        onImport={handleImportTransactions}
       />
     </>
   );

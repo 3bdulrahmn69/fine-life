@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const isAutomatic = searchParams.get('isAutomatic');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
+    const isExport = searchParams.get('export') === 'true';
 
     // Build query
     const query: Record<string, unknown> = { userId: session.user.id };
@@ -43,9 +44,29 @@ export async function GET(request: NextRequest) {
       query.date = { $gte: startOfMonth, $lte: endOfMonth };
     } else if (startDate || endDate) {
       const dateQuery: Record<string, Date> = {};
-      if (startDate) dateQuery.$gte = new Date(startDate);
-      if (endDate) dateQuery.$lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        dateQuery.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateQuery.$lte = end;
+      }
       query.date = dateQuery;
+    }
+    // If no date parameters provided and it's an export, we'll export all transactions
+
+    // For export, don't use pagination
+    if (isExport) {
+      const transactions = await Transaction.find(query)
+        .sort({ date: -1, createdAt: -1 })
+        .lean();
+
+      return NextResponse.json({
+        transactions,
+      });
     }
 
     const skip = (page - 1) * limit;
