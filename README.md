@@ -28,7 +28,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Currency Display**: Smart currency formatting with symbols and regional preferences
 - **Exchange Rate API**: Integration with fawazahmed0 currency API using @latest endpoint
 
-### � **Smart Budget Management**
+### 📊 **Smart Budget Management**
 
 - **Persistent Budgets**: Create and manage budgets that persist across months
 - **Category-based Planning**: Set spending limits for specific expense categories
@@ -37,7 +37,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Overspend Alerts**: Visual warnings when approaching or exceeding budget limits
 - **Flexible Budget Control**: Easy budget creation, editing, and deletion
 
-### �🔄 **Automatic Transaction Management**
+### ➰ **Automatic Transaction Management**
 
 - **Recurring Transactions**: Set up automatic income and expense transactions
 - **Flexible Scheduling**: Daily, weekly, monthly, and yearly recurrence patterns
@@ -53,7 +53,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Bulk Operations**: Efficient handling of multiple transactions
 - **Search & Filter**: Advanced filtering by date, category, type, and amount
 
-### �📤 **Data Import & Export**
+### 📤 **Data Import & Export**
 
 - **Multi-Format Support**: Import and export transactions in CSV and Excel (.xlsx) formats
 - **Drag & Drop Upload**: Intuitive file upload with drag-and-drop functionality
@@ -64,7 +64,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Toast Notifications**: Modern toast notifications for all import/export operations
 - **Preview & Validation**: Real-time data preview with error highlighting before import
 
-### �🔐 **Authentication & Security**
+### 🔐 **Authentication & Security**
 
 - **NextAuth Integration**: Secure authentication with multiple providers
 - **Session Management**: Persistent login sessions with automatic refresh
@@ -561,10 +561,6 @@ Unauthorized copying, distribution, or use is strictly prohibited.
 - **Portfolio**: [3bdulrahmn.vercel.app](https://3bdulrahmn.vercel.app)
 - **GitHub**: [@3bdulrahmn69](https://github.com/3bdulrahmn69)
 - **Email**: abdulrahamnmoussa69@gmail.com
-
----
-
-**Transform your financial life with Fine Life** - Start your journey to financial freedom today! 💰✨
 
 ---
 
