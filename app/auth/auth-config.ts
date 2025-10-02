@@ -41,7 +41,7 @@ export const authPageConfigs: Record<'signin' | 'signup', AuthPageConfig> = {
     type: 'signin',
     title: 'Sign In to Fine Life - Access Your Financial Dashboard',
     description:
-      'Sign in to your Fine Life account to access your personal finance dashboard, track expenses, manage budgets, and achieve your financial goals.',
+      'Sign in to your Fine Life account to access your personal finance dashboard, track expenses, manage budgets.',
     keywords: [
       'signin',
       'login',
@@ -62,7 +62,7 @@ export const authPageConfigs: Record<'signin' | 'signup', AuthPageConfig> = {
     type: 'signup',
     title: 'Sign Up for Fine Life - Start Your Financial Journey',
     description:
-      'Create your Fine Life account to access powerful financial tools, track expenses, manage budgets, and achieve your wealth-building goals. Join thousands taking control of their finances.',
+      'Create your Fine Life account to access powerful financial tools, track expenses, manage budgets, and build wealth systematically. Join thousands taking control of their finances.',
     keywords: [
       'signup',
       'register',

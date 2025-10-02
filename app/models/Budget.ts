@@ -30,17 +30,6 @@ const budgetSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 3,
     },
-    month: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 12,
-    },
-    year: {
-      type: Number,
-      required: true,
-      min: 2000,
-    },
     isOverall: {
       type: Boolean,
       required: true,
@@ -52,25 +41,27 @@ const budgetSchema = new mongoose.Schema(
   }
 );
 
-// Create compound indices for efficient queries
-budgetSchema.index({ userId: 1, month: 1, year: 1 });
-budgetSchema.index({ userId: 1, isOverall: 1, month: 1, year: 1 });
+// Create indices for efficient queries (persistent budgets)
+budgetSchema.index({ userId: 1 });
 
-// Ensure only one overall budget per user per month/year
+// Ensure only one overall budget per user
 budgetSchema.index(
-  { userId: 1, month: 1, year: 1, isOverall: 1 },
+  { userId: 1, isOverall: 1 },
   {
     unique: true,
     partialFilterExpression: { isOverall: true },
   }
 );
 
-// Ensure only one budget per category per user per month/year
+// Ensure only one budget per category per user
 budgetSchema.index(
-  { userId: 1, category: 1, month: 1, year: 1 },
+  { userId: 1, category: 1 },
   {
     unique: true,
-    partialFilterExpression: { isOverall: false, category: { $exists: true } },
+    partialFilterExpression: {
+      isOverall: false,
+      category: { $exists: true },
+    },
   }
 );
 

@@ -20,26 +20,35 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
+
+    // Always use current month/year for spending calculation, but get ALL user budgets
+    const now = new Date();
     const month = parseInt(
-      searchParams.get('month') || new Date().getMonth() + 1 + ''
+      searchParams.get('month') || (now.getMonth() + 1).toString()
     );
     const year = parseInt(
-      searchParams.get('year') || new Date().getFullYear() + ''
+      searchParams.get('year') || now.getFullYear().toString()
     );
-    const category = searchParams.get('category');
-    const isOverall = searchParams.get('isOverall') === 'true';
 
-    // Build query
-    const query: Record<string, unknown> = {
+    // Get ALL budgets for the user and clean up any legacy fields
+    await Budget.updateMany(
+      {
+        userId: session.user.id,
+        $or: [
+          { month: { $exists: true } },
+          { year: { $exists: true } },
+          { isActive: { $exists: true } },
+        ],
+      },
+      {
+        $unset: { month: 1, year: 1, isActive: 1 },
+      }
+    );
+
+    // Get all budgets for the user
+    const budgets = await Budget.find({
       userId: session.user.id,
-      month,
-      year,
-    };
-
-    if (category) query.category = category;
-    if (searchParams.has('isOverall')) query.isOverall = isOverall;
-
-    const budgets = await Budget.find(query).sort({
+    }).sort({
       isOverall: -1,
       category: 1,
     });
@@ -60,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     const userCurrency = userPreferences.currency;
 
-    // Get transactions for the same month/year to calculate spending
+    // Get transactions for current month to calculate spending (this resets monthly)
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -205,10 +214,23 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // Get current month/year
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
+    // Check if a budget for this category/overall already exists
+    const existingBudgetQuery: Record<string, unknown> = {
+      userId: session.user.id,
+      isOverall: Boolean(isOverall),
+    };
+
+    if (!isOverall && category?.trim()) {
+      existingBudgetQuery.category = category.trim();
+    }
+
+    const existingBudget = await Budget.findOne(existingBudgetQuery);
+    if (existingBudget) {
+      const message = isOverall
+        ? 'You already have an overall budget'
+        : 'You already have a budget for this category';
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
 
     const budgetData = {
       userId: session.user.id,
@@ -216,9 +238,8 @@ export async function POST(request: NextRequest) {
       category: isOverall ? undefined : category?.trim(),
       amount,
       currency: currency.toUpperCase(),
-      month,
-      year,
       isOverall: Boolean(isOverall),
+      createdAt: new Date(),
     };
 
     const budget = new Budget(budgetData);
@@ -227,16 +248,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(budget, { status: 201 });
   } catch (error) {
     console.error('Error creating budget:', error);
-
-    // Handle duplicate key error
-    if (error instanceof Error && 'code' in error && error.code === 11000) {
-      const isOverallDuplicate = error.message.includes('isOverall');
-      const message = isOverallDuplicate
-        ? 'You already have an overall budget for this month'
-        : 'You already have a budget for this category this month';
-
-      return NextResponse.json({ error: message }, { status: 409 });
-    }
 
     return NextResponse.json(
       { error: 'Internal server error' },

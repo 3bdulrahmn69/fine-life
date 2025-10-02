@@ -12,7 +12,6 @@ Disallow: /static/
 Allow: /
 Allow: /transactions
 Allow: /budget
-Allow: /goals
 
 # Sitemap
 Sitemap: https://fine-life.vercel.app/sitemap.xml

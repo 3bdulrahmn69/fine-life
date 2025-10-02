@@ -7,17 +7,16 @@ import {
   FiTarget,
   FiEdit,
   FiTrash2,
-  FiTrendingUp,
-  FiTrendingDown,
   FiEye,
   FiCalendar,
+  FiTrendingDown,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import {
   BudgetWithSpending,
   BudgetStats,
   BudgetFormData,
 } from '../../types/budget';
-import { Transaction } from '../../types/transaction';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { formatCurrency, CurrencyCode } from '../../lib/currency';
 import {
@@ -458,27 +457,25 @@ export default function BudgetPage() {
             </div>
           </div>
         ) : (
-          !overallBudget && (
-            <div className="text-center py-12 bg-primary-card rounded-xl border border-primary-border">
-              <div className="w-16 h-16 bg-primary-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiTarget className="w-8 h-8 text-primary-accent" />
-              </div>
-              <h3 className="text-lg font-semibold text-primary-foreground mb-2">
-                No Budgets Set
-              </h3>
-              <p className="text-primary-muted-foreground mb-6">
-                Create your first budget to start tracking your spending limits
-                and take control of your finances.
-              </p>
-              <button
-                onClick={() => setShowBudgetForm(true)}
-                className="inline-flex items-center px-6 py-3 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 transition-colors font-medium"
-              >
-                <FiPlus className="w-4 h-4 mr-2" />
-                Create Your First Budget
-              </button>
+          <div className="text-center py-12 bg-primary-card rounded-xl border border-primary-border">
+            <div className="w-16 h-16 bg-primary-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiTarget className="w-8 h-8 text-primary-accent" />
             </div>
-          )
+            <h3 className="text-lg font-semibold text-primary-foreground mb-2">
+              No Budgets Set
+            </h3>
+            <p className="text-primary-muted-foreground mb-6">
+              Create your first budget to start tracking your spending limits
+              and take control of your finances.
+            </p>
+            <button
+              onClick={() => setShowBudgetForm(true)}
+              className="inline-flex items-center px-6 py-3 bg-primary-accent text-primary-accent-foreground rounded-lg hover:bg-primary-accent/90 transition-colors font-medium"
+            >
+              <FiPlus className="w-4 h-4 mr-2" />
+              Create Your First Budget
+            </button>
+          </div>
         )}
       </div>
 

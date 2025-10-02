@@ -5,8 +5,6 @@ export interface Budget {
   category?: string; // undefined for overall budget
   amount: number;
   currency: string;
-  month: number; // 1-12
-  year: number;
   isOverall: boolean; // true for overall budget, false for category budget
   createdAt?: Date;
   updatedAt?: Date;
@@ -39,6 +37,5 @@ export interface BudgetStats {
 export interface BudgetFilters {
   category?: string;
   isOverall?: boolean;
-  month?: number;
-  year?: number;
+  isActive?: boolean;
 }

@@ -81,7 +81,7 @@ export default function BenefitsSection() {
                   icon: FiTrendingUp,
                   title: 'Build Wealth Systematically',
                   description:
-                    'Turn your financial goals into achievable milestones with personalized strategies, automated savings, and progress tracking.',
+                    'Turn your financial planning into systematic wealth building with smart budgeting, automated tracking, and insightful analytics.',
                   delay: 400,
                 },
                 {
@@ -166,7 +166,7 @@ export default function BenefitsSection() {
                   },
                   { label: 'Time Saved', value: '5+ hours/month', icon: FiZap },
                   {
-                    label: 'Goals Achieved',
+                    label: 'Budget Success',
                     value: '94% success rate',
                     icon: FiTarget,
                   },

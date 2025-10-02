@@ -161,7 +161,7 @@ export default function HeroSection() {
             <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-primary-card/30 backdrop-blur-sm border border-primary-border/30 hover:bg-primary-card/50 transition-all duration-300 group">
               <FiTarget className="text-2xl text-primary-accent group-hover:scale-110 transition-transform duration-300" />
               <span className="font-medium text-primary-foreground">
-                Goal Tracking
+                Progress Tracking
               </span>
             </div>
           </div>

@@ -14,7 +14,6 @@ export const metadata: Metadata = {
     'money management app',
     'personal finance tool',
     'budget planning',
-    'savings goals',
     'financial freedom',
   ],
   openGraph: {

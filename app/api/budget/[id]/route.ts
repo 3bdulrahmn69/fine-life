@@ -77,6 +77,26 @@ export async function PUT(
 
     await connectDB();
 
+    // Check if another active budget with the same category/overall already exists (excluding current one)
+    const existingBudgetQuery: Record<string, unknown> = {
+      userId: session.user.id,
+      isActive: true,
+      isOverall: Boolean(isOverall),
+      _id: { $ne: id },
+    };
+
+    if (!isOverall && category?.trim()) {
+      existingBudgetQuery.category = category.trim();
+    }
+
+    const existingBudget = await Budget.findOne(existingBudgetQuery);
+    if (existingBudget) {
+      const message = isOverall
+        ? 'You already have an active overall budget'
+        : 'You already have an active budget for this category';
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+
     const updateData = {
       name: name.trim(),
       category: isOverall ? undefined : category?.trim(),
@@ -101,16 +121,6 @@ export async function PUT(
     return NextResponse.json(budget);
   } catch (error) {
     console.error('Error updating budget:', error);
-
-    // Handle duplicate key error
-    if (error instanceof Error && 'code' in error && error.code === 11000) {
-      const isOverallDuplicate = error.message.includes('isOverall');
-      const message = isOverallDuplicate
-        ? 'You already have an overall budget for this month'
-        : 'You already have a budget for this category this month';
-
-      return NextResponse.json({ error: message }, { status: 409 });
-    }
 
     return NextResponse.json(
       { error: 'Internal server error' },

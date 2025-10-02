@@ -30,7 +30,6 @@ export const metadata: Metadata = {
     'financial planning',
     'wealth management',
     'expense tracking',
-    'financial goals',
     'money management',
     'financial dashboard',
     'budget planner',
@@ -123,7 +122,6 @@ export default function RootLayout({
     featureList: [
       'Expense Tracking',
       'Budget Planning',
-      'Financial Goal Setting',
       'Transaction Management',
       'Financial Analytics',
       'Community Insights',

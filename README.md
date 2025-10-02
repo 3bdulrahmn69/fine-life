@@ -6,7 +6,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.19.0-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-Transform your financial life with **Fine Life** - a comprehensive personal finance management application that provides smart tracking, intelligent budgeting, automated transaction processing, and multi-currency support to help you achieve financial freedom.
+Transform your financial life with **Fine Life** - a comprehensive personal finance management application that provides smart expense tracking, intelligent budget management, automated transaction processing, and multi-currency support to help you build wealth systematically.
 
 ![Fine Life Dashboard Preview](/og-home.jpg)
 
@@ -18,7 +18,7 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Monthly Navigation**: Easy month/year navigation with detailed transaction history
 - **Visual Analytics**: Interactive charts and spending category breakdowns
 - **Financial Insights**: Automated calculations and trend analysis
-- **Goal Tracking**: Set and monitor financial goals with progress indicators
+- **Progress Tracking**: Monitor your financial progress with comprehensive insights
 
 ### 💱 **Multi-Currency Support**
 
@@ -28,7 +28,16 @@ Transform your financial life with **Fine Life** - a comprehensive personal fina
 - **Currency Display**: Smart currency formatting with symbols and regional preferences
 - **Exchange Rate API**: Integration with fawazahmed0 currency API using @latest endpoint
 
-### 🔄 **Automatic Transaction Management**
+### � **Smart Budget Management**
+
+- **Persistent Budgets**: Create and manage budgets that persist across months
+- **Category-based Planning**: Set spending limits for specific expense categories
+- **Progress Tracking**: Visual progress indicators with spending vs budget comparison
+- **Budget Analytics**: Monthly insights and spending pattern analysis
+- **Overspend Alerts**: Visual warnings when approaching or exceeding budget limits
+- **Flexible Budget Control**: Easy budget creation, editing, and deletion
+
+### �🔄 **Automatic Transaction Management**
 
 - **Recurring Transactions**: Set up automatic income and expense transactions
 - **Flexible Scheduling**: Daily, weekly, monthly, and yearly recurrence patterns
@@ -104,7 +113,7 @@ fine-life/
 │   │   ├── overview/                # Financial Overview & Analytics
 │   │   ├── transactions/            # Transaction Management
 │   │   ├── budget/                  # Budget Planning & Tracking
-│   │   ├── goals/                   # Financial Goals Management
+
 │   │   └── components/              # Dashboard-specific Components
 │   │
 │   ├── 📄 (pages)/                  # Public & Settings Pages

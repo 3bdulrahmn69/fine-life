@@ -42,11 +42,11 @@ export default function HowItWorksSection() {
     },
     {
       icon: BiAlbum,
-      title: 'Achieve Your Goals',
+      title: 'Track Progress',
       description:
-        'Set savings targets, track progress, and celebrate milestones. Get personalized tips to optimize your budget and reach financial freedom faster.',
+        'Monitor your spending patterns, track budget performance, and get insights. Receive personalized tips to optimize your budget and build wealth.',
       color: 'from-orange-500 to-red-500',
-      tip: 'Gamified savings challenges',
+      tip: 'Smart financial insights',
       delay: '0.6s',
     },
   ];
@@ -60,8 +60,8 @@ export default function HowItWorksSection() {
     },
     {
       icon: BiAlbum,
-      label: 'Hit Goals',
-      value: '89% success rate',
+      label: 'Budget Success',
+      value: '89% stick to budget',
       color: 'text-blue-500',
     },
     {
@@ -174,7 +174,7 @@ export default function HowItWorksSection() {
             </h3>
             <p className="text-lg text-primary-text mb-8 max-w-2xl mx-auto">
               Join 15,000+ users who are already saving money, building wealth,
-              and achieving their financial goals. It takes less than 5 minutes
+              and taking control of their finances. It takes less than 5 minutes
               to get started.
             </p>
 

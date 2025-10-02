@@ -162,7 +162,7 @@ These are the basic finance tracking features that make the app usable.
 
 - Shared accounts for households/roommates
 - Individual vs shared expense tracking
-- Group budget goals and progress
+- Group budget planning and progress tracking
 - Permission levels (admin, contributor, viewer)
 - Split expenses functionality
 

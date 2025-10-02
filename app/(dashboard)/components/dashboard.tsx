@@ -27,7 +27,6 @@ export default function Dashboard({ children }: DashboardProps) {
   const getCurrentTab = () => {
     if (pathname === '/transactions') return 'transactions';
     if (pathname === '/budget') return 'budget';
-    if (pathname === '/goals') return 'goals';
     return 'overview';
   };
 
@@ -104,17 +103,6 @@ export default function Dashboard({ children }: DashboardProps) {
                 Budget
               </button>
             </Link>
-            <Link href="/goals" onClick={() => setIsMobileMenuOpen(false)}>
-              <button
-                className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === 'goals'
-                    ? 'bg-primary-muted text-primary-foreground'
-                    : 'text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50'
-                }`}
-              >
-                Goals
-              </button>
-            </Link>
 
             {/* User Section */}
             <div className="border-t border-primary-border pt-4 mt-4">
@@ -186,17 +174,6 @@ export default function Dashboard({ children }: DashboardProps) {
                       }`}
                     >
                       Budget
-                    </button>
-                  </Link>
-                  <Link href="/goals">
-                    <button
-                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'goals'
-                          ? 'bg-primary-muted text-primary-foreground'
-                          : 'text-primary-muted-foreground hover:text-primary-foreground'
-                      }`}
-                    >
-                      Goals
                     </button>
                   </Link>
                 </nav>
