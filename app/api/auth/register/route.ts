@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
 
@@ -96,15 +95,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user
+    // Create user (password will be hashed by the model's pre-save middleware)
     const user = await User.create({
       fullName: fullName.trim(),
       email: email.toLowerCase(),
       username: username.trim(),
-      password: hashedPassword,
+      password: password, // Let the model hash this
       dateOfBirth: birthDate,
     });
 

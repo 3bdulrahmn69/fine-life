@@ -48,6 +48,7 @@ const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters long'],
+      select: false, // Exclude password from queries by default
     },
     dateOfBirth: {
       type: Date,
