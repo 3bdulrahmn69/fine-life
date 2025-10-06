@@ -15,6 +15,13 @@ interface DashboardProps {
   children: React.ReactNode;
 }
 
+const navLinks = [
+  { name: 'Overview', href: '/' },
+  { name: 'Transactions', href: '/transactions' },
+  { name: 'Budget', href: '/budget' },
+  { name: 'Statistics', href: '/statistics' },
+];
+
 export default function Dashboard({ children }: DashboardProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -27,6 +34,7 @@ export default function Dashboard({ children }: DashboardProps) {
   const getCurrentTab = () => {
     if (pathname === '/transactions') return 'transactions';
     if (pathname === '/budget') return 'budget';
+    if (pathname === '/statistics') return 'statistics';
     return 'overview';
   };
 
@@ -67,42 +75,23 @@ export default function Dashboard({ children }: DashboardProps) {
           </div>
 
           <nav className="flex flex-col space-y-2 p-4">
-            <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-              <button
-                className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === 'overview'
-                    ? 'bg-primary-muted text-primary-foreground'
-                    : 'text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50'
-                }`}
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
-                Overview
-              </button>
-            </Link>
-            <Link
-              href="/transactions"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <button
-                className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === 'transactions'
-                    ? 'bg-primary-muted text-primary-foreground'
-                    : 'text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50'
-                }`}
-              >
-                Transactions
-              </button>
-            </Link>
-            <Link href="/budget" onClick={() => setIsMobileMenuOpen(false)}>
-              <button
-                className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  activeTab === 'budget'
-                    ? 'bg-primary-muted text-primary-foreground'
-                    : 'text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50'
-                }`}
-              >
-                Budget
-              </button>
-            </Link>
+                <button
+                  className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    activeTab === link.name.toLowerCase()
+                      ? 'bg-primary-muted text-primary-foreground'
+                      : 'text-primary-muted-foreground hover:text-primary-foreground hover:bg-primary-muted/50'
+                  }`}
+                >
+                  {link.name}
+                </button>
+              </Link>
+            ))}
 
             {/* User Section */}
             <div className="border-t border-primary-border pt-4 mt-4">
@@ -143,39 +132,19 @@ export default function Dashboard({ children }: DashboardProps) {
                 </div>
 
                 <nav className="hidden md:flex space-x-6">
-                  <Link href="/">
-                    <button
-                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'overview'
-                          ? 'bg-primary-muted text-primary-foreground'
-                          : 'text-primary-muted-foreground hover:text-primary-foreground'
-                      }`}
-                    >
-                      Overview
-                    </button>
-                  </Link>
-                  <Link href="/transactions">
-                    <button
-                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'transactions'
-                          ? 'bg-primary-muted text-primary-foreground'
-                          : 'text-primary-muted-foreground hover:text-primary-foreground'
-                      }`}
-                    >
-                      Transactions
-                    </button>
-                  </Link>
-                  <Link href="/budget">
-                    <button
-                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'budget'
-                          ? 'bg-primary-muted text-primary-foreground'
-                          : 'text-primary-muted-foreground hover:text-primary-foreground'
-                      }`}
-                    >
-                      Budget
-                    </button>
-                  </Link>
+                  {navLinks.map((link) => (
+                    <Link key={link.name} href={link.href}>
+                      <button
+                        className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                          activeTab === link.name.toLowerCase()
+                            ? 'bg-primary-muted text-primary-foreground'
+                            : 'text-primary-muted-foreground hover:text-primary-foreground'
+                        }`}
+                      >
+                        {link.name}
+                      </button>
+                    </Link>
+                  ))}
                 </nav>
               </div>
 
