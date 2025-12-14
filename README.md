@@ -538,7 +538,7 @@ Full-Stack Developer & Entrepreneur
 
 - **Portfolio**: [3bdulrahmn.vercel.app](https://3bdulrahmn.vercel.app)
 - **GitHub**: [@3bdulrahmn69](https://github.com/3bdulrahmn69)
-- **Email**: abdulrahamn.moussa@gmail.com
+- **Email**: abdulrahamn.moussa.dev@gmail.com
 
 Passionate about creating innovative financial solutions and helping people achieve financial freedom through technology.
 
